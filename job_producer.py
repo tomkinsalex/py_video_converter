@@ -54,10 +54,9 @@ class JobProducer(RegexMatchingEventHandler):
         output_file_name = conf.FILEBOT_DIR + "/"+ ".".join(file_name.split('/')[-1].split('.')[:-1]) + ".mp4"
         file_prefix = ".".join(file_name.split('/')[-1].split('.')[:-1])
         input_concat_vids = [interval["to_concat_name"] for interval in intervals]
-        job = self.organize_q.enqueue(waiting_for_vids, description='waiting_for_vids-'+str(len(input_concat_vids)), args=(input_concat_vids,), job_timeout=9000)
-        job = self.organize_q.enqueue(concat_vids, depends_on=job.id, at_front=True, description='concat_vids-'+str(len(input_concat_vids)), args=(input_concat_vids, output_file_name, file_prefix,))
-        job = self.organize_q.enqueue(organize_vids, depends_on=job.id, at_front=True, description='organize_vids-'+output_file_name, args=(file_name, output_file_name,))
-        self.last_job_id = job.id
+        self.organize_q.enqueue(waiting_for_vids, description='waiting_for_vids-'+str(len(input_concat_vids)), args=(input_concat_vids,), job_timeout=9000)
+        self.organize_q.enqueue(concat_vids, description='concat_vids-'+str(len(input_concat_vids)), args=(input_concat_vids, output_file_name, file_prefix,))
+        self.organize_q.enqueue(organize_vids, description='organize_vids-'+output_file_name, args=(file_name, output_file_name,))
 
 
     def create_split_job(self,file_name, chunk_prefix, chunk_suffix):
