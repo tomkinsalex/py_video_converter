@@ -26,3 +26,5 @@ def init():
     DROP_ZONE_DIR=os.getenv("DROP_ZONE_DIR")
     global LOCAL_DIR
     LOCAL_DIR=os.getenv("LOCAL_DIR")
+    global CONVERTING_DIR
+    CONVERTING_DIR=ROOT_DIR+'/converting'

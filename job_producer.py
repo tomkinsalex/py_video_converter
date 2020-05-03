@@ -66,7 +66,7 @@ class JobProducer(RegexMatchingEventHandler):
 
     def create_convert_jobs(self, intervals):
         for interval in intervals:
-            self.convert_q.enqueue(convert_vid, description="convert_vid-"+interval["chunk_name"], args=(interval["chunk_name"], interval["local_name"], interval["local_output"],interval['to_concat_name'],), job_timeout=1200)
+            self.convert_q.enqueue(convert_vid, description="convert_vid-"+interval["chunk_name"], args=(interval["chunk_name"], interval["chunk_output"],), job_timeout=1200)
 
 
     def get_intervals(self,file_name):
@@ -83,8 +83,7 @@ class JobProducer(RegexMatchingEventHandler):
         interval_list = list()
         file_prefix = '.'.join(file_name.split('.')[:-1])
         chunk_prefix = conf.CHUNKED_DIR +'/' +file_prefix.split('/')[-1]+'-'
-        local_prefix = conf.LOCAL_DIR +'/input/' +file_prefix.split('/')[-1]+'-'
-        local_output_prefix = conf.LOCAL_DIR +'/output/' +file_prefix.split('/')[-1]+'-'
+        chunk_processed_prefix = conf.CONVERTING_DIR +'/' +file_prefix.split('/')[-1]+'-'
         to_concat_prefix = conf.TO_CONCAT_DIR +'/' + file_prefix.split('/')[-1]+'-'
         chunk_suffix = file_name.split('.')[-1]
         cursor = datetime.timedelta(minutes=0)
@@ -94,8 +93,7 @@ class JobProducer(RegexMatchingEventHandler):
         while cursor < total_delta:
             interval_dict = {}
             interval_dict["chunk_name"] = chunk_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
-            interval_dict["local_name"] = local_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
-            interval_dict["local_output"] = local_output_prefix + "{:0>2d}".format(counter) +".mp4"
+            interval_dict["chunk_output"] = chunk_processed_prefix + "{:0>2d}".format(counter) +".mp4"
             interval_dict["to_concat_name"] =  to_concat_prefix + "{:0>2d}".format(counter) +".mp4"
             interval_list.append(interval_dict)
             cursor = cursor + interval_delta
@@ -103,8 +101,7 @@ class JobProducer(RegexMatchingEventHandler):
 
         interval_dict = {}
         interval_dict["chunk_name"] = chunk_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
-        interval_dict["local_name"] = local_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
-        interval_dict["local_output"] = local_output_prefix + "{:0>2d}".format(counter) +".mp4"
+        interval_dict["chunk_output"] = chunk_processed_prefix + "{:0>2d}".format(counter) +".mp4"
         interval_dict["to_concat_name"] =  to_concat_prefix + "{:0>2d}".format(counter) +".mp4"
         interval_list.append(interval_dict)
         return interval_list, chunk_prefix, chunk_suffix
