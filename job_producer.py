@@ -14,18 +14,17 @@ logger = get_logger(__name__)
 class JobProducer(RegexMatchingEventHandler):
     VIDEO_REGEX = [r"^.*\.?(mkv|mp4|mpeg|m4v|flv|avi)$"]
 
-    def __init__(self, convert_q, organize_q, splitter_q):
+    def __init__(self, convert_q, organize_q):
         super().__init__(self.VIDEO_REGEX)
         self.convert_q = convert_q
         self.organize_q = organize_q
-        self.splitter_q =splitter_q
         logger.info("New job producer made")
         
 
     def on_created(self, event):
         logger.info("Waiting for file to finish copying")
         file_size = -1
-        while file_size != os.path.getsize(event.src_path) and os.path.getsize(event.src_path) < 80000000:
+        while file_size != os.path.getsize(event.src_path):
             file_size = os.path.getsize(event.src_path)
             time.sleep(1)
         self.process(event)
@@ -46,8 +45,8 @@ class JobProducer(RegexMatchingEventHandler):
 
     def produce_jobs(self,file_name):
         intervals, chunk_prefix, chunk_suffix = self.get_intervals(file_name)
-        self.create_split_job(file_name, chunk_prefix, chunk_suffix)
-        self.create_convert_jobs(intervals)
+        split_job_id = self.create_split_job(file_name, chunk_prefix, chunk_suffix)
+        self.create_convert_jobs(intervals, split_job_id)
         self.create_finishing_jobs(intervals, file_name)
 
 
@@ -61,12 +60,13 @@ class JobProducer(RegexMatchingEventHandler):
 
 
     def create_split_job(self,file_name, chunk_prefix, chunk_suffix):
-        self.splitter_q.enqueue(split_vid, description="split_vid-"+file_name ,args=(file_name, chunk_prefix, chunk_suffix,))
+        job = self.convert_q.enqueue(split_vid, description="split_vid-"+file_name ,args=(file_name, chunk_prefix, chunk_suffix,))
+        return job.id
 
 
-    def create_convert_jobs(self, intervals):
+    def create_convert_jobs(self, intervals, split_job_id):
         for interval in intervals:
-            self.convert_q.enqueue(convert_vid, description="convert_vid-"+interval["chunk_name"], args=(interval["chunk_name"], interval["chunk_output"],), job_timeout=1200)
+            self.convert_q.enqueue(convert_vid, description="convert_vid-"+interval["chunk_name"], depends_on=split_job_id, args=(interval["chunk_name"], interval["chunk_output"],), job_timeout=1200)
 
 
     def get_intervals(self,file_name):
