@@ -10,16 +10,17 @@ def main(redis_host, start_who, worker_type):
     else:
         from threading import Thread
         from manager import start_manager
+        from multiprocessing import Process
 
         thread_producer = Thread(target=start_manager, args=(redis_host,conf.REDIS_PORT,))
         thread_producer.daemon = True
         thread_producer.start()
 
-        thread_splitter = Thread(target=start_worker, args=(redis_host,conf.REDIS_PORT,'splitter',))
-        thread_splitter.daemon = True
-        thread_splitter.start()
+        process_splitter = Process(target=start_worker, args=(redis_host,conf.REDIS_PORT,'split',))
+        process_splitter.daemon = True
+        process_splitter.start()
 
-        start_worker(redis_host,conf.REDIS_PORT, 'organizer')
+        start_worker(redis_host,conf.REDIS_PORT, 'organize')
 
 
 if __name__ == '__main__':
