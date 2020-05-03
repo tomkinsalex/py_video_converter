@@ -18,9 +18,15 @@ def split_vid(vid_name, chunk_prefix, chunk_suffix):
     logger.info("Done splitting video %s " % vid_name)
 
 def convert_vid(video_name, video_output):
+    logger.info("Waiting for file")
     while not path.exists(video_name):
         sleep(1)
-        
+
+    file_size =-1
+    while file_size != path.getsize(video_name):
+        file_size = path.getsize(video_name)
+        sleep(1)
+
     cmd_temp = """ffmpeg -y -loglevel error -stats -i "{video_name}" -sn  -vcodec h264 -acodec libvorbis -preset fast -profile:v high -level 4.1 -crf 17 -pix_fmt yuv420p -max_muxing_queue_size 1024 "{video_output}" """
     logger.info("Starting to convert video %s" % video_name )
     cmd = cmd_temp.format(video_name=video_name, video_output=video_output)
