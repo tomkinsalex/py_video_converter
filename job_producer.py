@@ -83,7 +83,7 @@ class JobProducer(RegexMatchingEventHandler):
         interval_list = list()
         file_prefix = '.'.join(file_name.split('.')[:-1])
         chunk_prefix = conf.CHUNKED_DIR +'/' +file_prefix.split('/')[-1]+'-'
-        local_prefix = conf.CHUNKED_DIR +'/' +file_prefix.split('/')[-1]+'-'
+        local_prefix = conf.LOCAL_DIR +'/' +file_prefix.split('/')[-1]+'-'
         to_concat_prefix = conf.TO_CONCAT_DIR +'/' + file_prefix.split('/')[-1]+'-'
         chunk_suffix = file_name.split('.')[-1]
         cursor = datetime.timedelta(minutes=0)
