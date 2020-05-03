@@ -14,10 +14,11 @@ logger = get_logger(__name__)
 class JobProducer(RegexMatchingEventHandler):
     VIDEO_REGEX = [r"^.*\.?(mkv|mp4|mpeg|m4v|flv|avi)$"]
 
-    def __init__(self, convert_q, organize_q):
+    def __init__(self, convert_q, organize_q, splitter_q):
         super().__init__(self.VIDEO_REGEX)
         self.convert_q = convert_q
         self.organize_q = organize_q
+        self.splitter_q =splitter_q
         logger.info("New job producer made")
         
 
@@ -45,8 +46,8 @@ class JobProducer(RegexMatchingEventHandler):
 
     def produce_jobs(self,file_name):
         intervals, chunk_prefix, chunk_suffix = self.get_intervals(file_name)
-        split_job_id = self.create_split_job(file_name, chunk_prefix, chunk_suffix)
-        self.create_convert_jobs(intervals, split_job_id)
+        self.create_split_job(file_name, chunk_prefix, chunk_suffix)
+        self.create_convert_jobs(intervals)
         self.create_finishing_jobs(intervals, file_name)
 
 
@@ -60,13 +61,12 @@ class JobProducer(RegexMatchingEventHandler):
 
 
     def create_split_job(self,file_name, chunk_prefix, chunk_suffix):
-        job = self.convert_q.enqueue(split_vid, description="split_vid-"+file_name ,args=(file_name, chunk_prefix, chunk_suffix,))
-        return job.id
+        self.splitter_q.enqueue(split_vid, description="split_vid-"+file_name ,args=(file_name, chunk_prefix, chunk_suffix,))
 
 
-    def create_convert_jobs(self, intervals, split_job_id):
+    def create_convert_jobs(self, intervals):
         for interval in intervals:
-            self.convert_q.enqueue(convert_vid, description="convert_vid-"+interval["chunk_name"], depends_on=split_job_id, args=(interval["chunk_name"], interval["chunk_output"],), job_timeout=1200)
+            self.convert_q.enqueue(convert_vid, description="convert_vid-"+interval["chunk_name"], args=(interval["chunk_name"], interval["local_name"], interval["local_output"],interval['to_concat_name'],), job_timeout=1200)
 
 
     def get_intervals(self,file_name):
@@ -83,7 +83,7 @@ class JobProducer(RegexMatchingEventHandler):
         interval_list = list()
         file_prefix = '.'.join(file_name.split('.')[:-1])
         chunk_prefix = conf.CHUNKED_DIR +'/' +file_prefix.split('/')[-1]+'-'
-        chunk_processed_prefix = conf.CONVERTING_DIR +'/' +file_prefix.split('/')[-1]+'-'
+        local_prefix = conf.CHUNKED_DIR +'/' +file_prefix.split('/')[-1]+'-'
         to_concat_prefix = conf.TO_CONCAT_DIR +'/' + file_prefix.split('/')[-1]+'-'
         chunk_suffix = file_name.split('.')[-1]
         cursor = datetime.timedelta(minutes=0)
@@ -93,7 +93,8 @@ class JobProducer(RegexMatchingEventHandler):
         while cursor < total_delta:
             interval_dict = {}
             interval_dict["chunk_name"] = chunk_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
-            interval_dict["chunk_output"] = chunk_processed_prefix + "{:0>2d}".format(counter) +".mp4"
+            interval_dict["local_name"] = local_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
+            interval_dict["local_output"] = local_prefix + "{:0>2d}".format(counter) +".mp4"
             interval_dict["to_concat_name"] =  to_concat_prefix + "{:0>2d}".format(counter) +".mp4"
             interval_list.append(interval_dict)
             cursor = cursor + interval_delta
@@ -101,7 +102,8 @@ class JobProducer(RegexMatchingEventHandler):
 
         interval_dict = {}
         interval_dict["chunk_name"] = chunk_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
-        interval_dict["chunk_output"] = chunk_processed_prefix + "{:0>2d}".format(counter) +".mp4"
+        interval_dict["local_name"] = local_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
+        interval_dict["local_output"] = local_prefix + "{:0>2d}".format(counter) +".mp4"
         interval_dict["to_concat_name"] =  to_concat_prefix + "{:0>2d}".format(counter) +".mp4"
         interval_list.append(interval_dict)
         return interval_list, chunk_prefix, chunk_suffix

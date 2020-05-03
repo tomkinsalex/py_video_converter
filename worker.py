@@ -9,11 +9,7 @@ logger = get_logger(__name__)
 
 def start_worker(host, port, worker_type):
    with Connection(connection=Redis(host=host, port=port)):
-        if worker_type == 'converter': 
-            worker = Worker("convert_q")
-            worker.work()
-        else:
-            worker = Worker("organize_q")
-            worker.work()
+        worker = Worker('%s_q' % worker_type )
+        worker.work()
 
     

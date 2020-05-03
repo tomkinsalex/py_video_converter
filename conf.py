@@ -14,8 +14,6 @@ def init():
     ASSET_TMP_DIR=ROOT_DIR +'/home-caster-tmp'
     global TO_CONCAT_DIR
     TO_CONCAT_DIR=ROOT_DIR +'/to_concat'
-    global CONVERTING_DIR
-    CONVERTING_DIR=ROOT_DIR +'/converting'
     global CHUNKED_DIR
     CHUNKED_DIR=ROOT_DIR +'/chunked'
     global FILEBOT_DIR
@@ -26,3 +24,5 @@ def init():
     FILEBOT_PROCESSED_LIST=ROOT_DIR +'/logs/processed.txt'
     global DROP_ZONE_DIR
     DROP_ZONE_DIR=os.getenv("DROP_ZONE_DIR")
+    global LOCAL_DIR
+    LOCAL_DIR=os.getenv("LOCAL_DIR")

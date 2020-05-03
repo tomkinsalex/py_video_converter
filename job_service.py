@@ -17,16 +17,22 @@ def split_vid(vid_name, chunk_prefix, chunk_suffix):
     run_shell(cmd)
     logger.info("Done splitting video %s " % vid_name)
 
-def convert_vid(video_name, video_output):
-    cmd_temp = """ffmpeg -y -loglevel error -stats -i "{video_name}" -sn  -vcodec h264 -acodec libvorbis -preset fast -profile:v high -level 4.1 -crf 17 -pix_fmt yuv420p -max_muxing_queue_size 1024 "{video_output}" """
-    logger.info("Starting to convert video %s" % video_name )
-    cmd = cmd_temp.format(video_name=video_name, video_output=video_output)
+def convert_vid(shared_name, local_name, local_output, copy_to):
+    logger.info("Waiting for file %s" % shared_name)
+    while not path.exists(shared_name):
+        sleep(1)
+    
+    run_shell("""cp "%s" "%s" """ % (shared_name, local_name))
+    run_shell("""rm "%s" """ % shared_name)
+    cmd_temp = """ffmpeg -y -loglevel error -stats -i "{local_name}" -sn  -vcodec h264 -acodec libvorbis -preset fast -profile:v high -level 4.1 -crf 17 -pix_fmt yuv420p -max_muxing_queue_size 1024 "{local_output}" """
+    logger.info("Starting to convert video %s" % local_name )
+    cmd = cmd_temp.format(local_name=local_name, local_output=local_output)
     logger.info("Command used : %s" % cmd)
     if run_shell(cmd): 
-        logger.info("Done converting video %s" % video_output)
-        cmd = """cp "%s" %s""" % (video_output, conf.TO_CONCAT_DIR)
+        logger.info("Done converting video %s" % local_output)
+        cmd = """cp "%s" "%s" """ % (local_output, copy_to)
         run_shell(cmd)
-        cmd = """rm "%s" "%s" """ % (video_output, video_name)
+        cmd = """rm "%s" "%s" """ % (local_output, local_name)
         run_shell(cmd)
         logger.info("Copied file to concat dir")
     else:
