@@ -93,8 +93,8 @@ class JobProducer(RegexMatchingEventHandler):
         while cursor < total_delta:
             interval_dict = {}
             interval_dict["chunk_name"] = chunk_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
-            interval_dict["local_name"] = local_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
-            interval_dict["local_output"] = local_prefix + "{:0>2d}".format(counter) +".mp4"
+            interval_dict["local_name"] = local_prefix + "input/"+ "{:0>2d}".format(counter) +"."+ chunk_suffix
+            interval_dict["local_output"] = local_prefix + "output/"+"{:0>2d}".format(counter) +".mp4"
             interval_dict["to_concat_name"] =  to_concat_prefix + "{:0>2d}".format(counter) +".mp4"
             interval_list.append(interval_dict)
             cursor = cursor + interval_delta
@@ -102,8 +102,8 @@ class JobProducer(RegexMatchingEventHandler):
 
         interval_dict = {}
         interval_dict["chunk_name"] = chunk_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
-        interval_dict["local_name"] = local_prefix + "{:0>2d}".format(counter) +"."+ chunk_suffix
-        interval_dict["local_output"] = local_prefix + "{:0>2d}".format(counter) +".mp4"
+        interval_dict["local_name"] = local_prefix + "input/"+"{:0>2d}".format(counter) +"."+ chunk_suffix
+        interval_dict["local_output"] = local_prefix + "output/"+"{:0>2d}".format(counter) +".mp4"
         interval_dict["to_concat_name"] =  to_concat_prefix + "{:0>2d}".format(counter) +".mp4"
         interval_list.append(interval_dict)
         return interval_list, chunk_prefix, chunk_suffix

@@ -23,6 +23,7 @@ def convert_vid(shared_name, local_name, local_output, copy_to):
         sleep(1)
     
     run_shell("""cp "%s" "%s" """ % (shared_name, local_name))
+    run_shell("""rm "%s" """ % shared_name)
     cmd_temp = """ffmpeg -y -loglevel error -stats -i "{local_name}" -sn  -vcodec h264 -acodec libvorbis -preset fast -profile:v high -level 4.1 -crf 17 -pix_fmt yuv420p -max_muxing_queue_size 1024 "{local_output}" """
     logger.info("Starting to convert video %s" % local_name )
     cmd = cmd_temp.format(local_name=local_name, local_output=local_output)
