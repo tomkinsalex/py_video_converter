@@ -25,7 +25,7 @@ class JobProducer(RegexMatchingEventHandler):
     def on_created(self, event):
         logger.info("Waiting for file to finish copying")
         file_size = -1
-        while file_size != os.path.getsize(event.src_path):
+        while file_size != os.path.getsize(event.src_path) and os.path.getsize(event.src_path) < 80000000:
             file_size = os.path.getsize(event.src_path)
             time.sleep(1)
         self.process(event)
