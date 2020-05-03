@@ -45,9 +45,10 @@ class JobProducer(RegexMatchingEventHandler):
 
     def produce_jobs(self,file_name):
         intervals, chunk_prefix, chunk_suffix = self.get_intervals(file_name)
-        split_job_id = self.create_split_job(file_name, chunk_prefix, chunk_suffix)
-        self.create_convert_jobs(intervals, split_job_id)
-        self.create_finishing_jobs(intervals, file_name)
+        if intervals:
+            split_job_id = self.create_split_job(file_name, chunk_prefix, chunk_suffix)
+            self.create_convert_jobs(intervals, split_job_id)
+            self.create_finishing_jobs(intervals, file_name)
 
 
     def create_finishing_jobs(self, intervals, file_name):
@@ -78,8 +79,10 @@ class JobProducer(RegexMatchingEventHandler):
         video_len = output.split('.')[0].split(':')
         if len(video_len) == 3:
             total_delta = datetime.timedelta(hours=int(video_len[0]), minutes=int(video_len[1]), seconds=int(video_len[2]))
-        else:
+        elif len(video_len) == 2:
             total_delta = datetime.timedelta(minutes=int(video_len[0]), seconds=int(video_len[1]))
+        else:
+            return None, None, None
         interval_list = list()
         file_prefix = '.'.join(file_name.split('.')[:-1])
         chunk_prefix = conf.CHUNKED_DIR +'/' +file_prefix.split('/')[-1]+'-'
