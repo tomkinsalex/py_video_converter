@@ -57,7 +57,7 @@ class JobProducer(RegexMatchingEventHandler):
         input_concat_vids = [interval["to_concat_name"] for interval in intervals]
         self.organize_q.enqueue(waiting_for_vids, description='waiting_for_vids-'+str(len(input_concat_vids)), args=(input_concat_vids,), job_timeout=9000)
         self.organize_q.enqueue(concat_vids, description='concat_vids-'+str(len(input_concat_vids)), args=(input_concat_vids, output_file_name, file_prefix,))
-        self.organize_q.enqueue(organize_vids, description='organize_vids-'+output_file_name, args=(file_name, output_file_name,))
+        self.organize_q.enqueue(organize_vids, description='organize_vids-'+output_file_name, args=(file_name, output_file_name,),job_timeout=600)
 
 
     def create_split_job(self,file_name, chunk_prefix, chunk_suffix):

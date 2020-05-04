@@ -11,5 +11,3 @@ def start_worker(host, port, worker_type):
    with Connection(connection=Redis(host=host, port=port)):
         worker = Worker('%s_q' % worker_type )
         worker.work()
-
-    
