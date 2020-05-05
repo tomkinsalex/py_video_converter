@@ -11,10 +11,9 @@ def main(redis_host, start_who, worker_type):
         from manager import start_manager
         from multiprocessing import Process
 
-        proc_producer = Process(target=start_manager, args=(redis_host,conf.REDIS_PORT,), daemon=True)
-        proc_producer.start()
-        
-        start_worker(redis_host,conf.REDIS_PORT, 'organize')
+        proc = Process(target=start_worker, args=(redis_host,conf.REDIS_PORT,'organize'), daemon=True)
+        proc.start()
+        start_manager(redis_host,conf.REDIS_PORT)
 
 
 if __name__ == '__main__':
