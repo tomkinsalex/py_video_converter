@@ -55,9 +55,9 @@ class JobProducer(RegexMatchingEventHandler):
         output_file_name = conf.FILEBOT_DIR + "/"+ ".".join(file_name.split('/')[-1].split('.')[:-1]) + ".mp4"
         file_prefix = ".".join(file_name.split('/')[-1].split('.')[:-1])
         input_concat_vids = [interval["to_concat_name"] for interval in intervals]
-        self.organize_q.enqueue(waiting_for_vids, description='waiting_for_vids-'+str(len(input_concat_vids)), args=(input_concat_vids,), job_timeout=9000)
+        self.organize_q.enqueue(waiting_for_vids, description='waiting_for_vids-'+str(len(input_concat_vids)), args=(input_concat_vids,), job_timeout=18000)
         self.organize_q.enqueue(concat_vids, description='concat_vids-'+str(len(input_concat_vids)), args=(input_concat_vids, output_file_name, file_prefix,))
-        self.organize_q.enqueue(organize_vids, description='organize_vids-'+output_file_name, args=(file_name, output_file_name,),job_timeout=600)
+        self.organize_q.enqueue(organize_vids, description='organize_vids-'+output_file_name, args=(file_name, output_file_name,),job_timeout=1200)
 
 
     def create_split_job(self,file_name, chunk_prefix, chunk_suffix):
@@ -67,7 +67,7 @@ class JobProducer(RegexMatchingEventHandler):
 
     def create_convert_jobs(self, intervals, split_job_id):
         for interval in intervals:
-            self.convert_q.enqueue(convert_vid, description="convert_vid-"+interval["chunk_name"], depends_on=split_job_id, args=(interval["chunk_name"], interval["chunk_output"],), job_timeout=1200)
+            self.convert_q.enqueue(convert_vid, description="convert_vid-"+interval["chunk_name"], depends_on=split_job_id, args=(interval["chunk_name"], interval["chunk_output"],), job_timeout=2100)
 
 
     def get_intervals(self,file_name):

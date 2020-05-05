@@ -75,7 +75,7 @@ def organize_vids(input_file, final_output_file):
     if run_shell(cmd):
         run_shell('rm "%s"' % final_output_file)
         logger.info("Starting picture organizer")
-        cmd = """rsync -r --exclude={'*.mp4','*.nfo'} %s/ %s """ % (conf.FINAL_DIR, conf.ASSET_TMP_DIR)
+        cmd = """rsync -r --exclude '*.mp4' --exclude '*.nfo' %s/ %s """ % (conf.FINAL_DIR, conf.ASSET_TMP_DIR)
         logger.info("Command used : %s" % cmd)
         if run_shell(cmd):
             run_shell("rm -rf %s/*" % conf.ASSETS_DIR)
