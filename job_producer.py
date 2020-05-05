@@ -18,7 +18,7 @@ class JobProducer:
     def process(self, file_name):
         logger.info("Waiting for file to finish copying")
         file_size = -1
-        while file_size != os.path.getsize(file_name):
+        while file_size != os.path.getsize(file_name) and file_size < 100000000:
             file_size = os.path.getsize(file_name)
             time.sleep(3)
         logger.info("Processing new video file event")
