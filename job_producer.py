@@ -21,7 +21,8 @@ class JobProducer:
         while file_size != os.path.getsize(file_name) and file_size < 100000000:
             file_size = os.path.getsize(file_name)
             time.sleep(3)
-        logger.info("Processing new video file event")
+        logger.info("Done waiting, file size: %d , ospath.getfilesize: %d" % (file_size, os.path.getsize(file_name)))
+        logger.info("Processing new video file event for %s" % file_name)
         self.produce_jobs(file_name)
 
     
