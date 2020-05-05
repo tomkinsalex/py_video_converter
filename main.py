@@ -8,13 +8,11 @@ def main(redis_host, start_who, worker_type):
     if start_who ==  'worker':
         start_worker(redis_host,conf.REDIS_PORT, worker_type)
     else:
-        from threading import Thread
         from manager import start_manager
         from multiprocessing import Process
 
-        thread_producer = Thread(target=start_manager, args=(redis_host,conf.REDIS_PORT,))
-        thread_producer.daemon = True
-        thread_producer.start()
+        proc_producer = Process(target=start_manager, args=(redis_host,conf.REDIS_PORT,), daemon=True)
+        proc_producer.start()
         
         start_worker(redis_host,conf.REDIS_PORT, 'organize')
 

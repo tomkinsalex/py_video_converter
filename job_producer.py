@@ -2,36 +2,27 @@ import os
 import subprocess
 import datetime
 import time
-from watchdog.events import RegexMatchingEventHandler
 import manager
 import conf
 from job_service import split_vid, convert_vid, waiting_for_vids, concat_vids, organize_vids
-
 from log_it import get_logger
 
 logger = get_logger(__name__)
 
-class JobProducer(RegexMatchingEventHandler):
-    VIDEO_REGEX = [r"^.*\.?(mkv|mp4|mpeg|m4v|flv|avi)$"]
+class JobProducer:
 
     def __init__(self, convert_q, organize_q):
-        super().__init__(self.VIDEO_REGEX)
         self.convert_q = convert_q
         self.organize_q = organize_q
-        logger.info("New job producer made")
-        
 
-    def on_created(self, event):
+    def process(self, file_name):
         logger.info("Waiting for file to finish copying")
         file_size = -1
-        while file_size != os.path.getsize(event.src_path):
-            file_size = os.path.getsize(event.src_path)
-            time.sleep(1)
-        self.process(event)
-
-    def process(self, event):
+        while file_size != os.path.getsize(file_name):
+            file_size = os.path.getsize(file_name)
+            time.sleep(3)
         logger.info("Processing new video file event")
-        self.produce_jobs(event.src_path)
+        self.produce_jobs(file_name)
 
     
     def format_timedelta(self,time_delta):
