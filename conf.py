@@ -24,7 +24,7 @@ def init():
     FILEBOT_PROCESSED_LIST=ROOT_DIR +'/logs/processed.txt'
     global DROP_ZONE_DIR
     DROP_ZONE_DIR=os.getenv("DROP_ZONE_DIR")
-    global LOCAL_DIR
-    LOCAL_DIR=os.getenv("LOCAL_DIR")
+    global LOG_DIR
+    LOG_DIR=os.getenv("LOG_DIR")
     global CONVERTING_DIR
     CONVERTING_DIR=ROOT_DIR+'/converting'
