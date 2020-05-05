@@ -18,7 +18,9 @@ class JobProducer:
     def process(self, file_name):
         logger.info("Waiting for file to finish copying")
         file_size = -1
-        while file_size != os.path.getsize(file_name) and file_size < 100000000:
+        while True:
+            if file_size == os.path.getsize(file_name) and file_size > 100000000:
+                break
             file_size = os.path.getsize(file_name)
             time.sleep(3)
         logger.info("Done waiting, file size: %d , ospath.getfilesize: %d" % (file_size, os.path.getsize(file_name)))
