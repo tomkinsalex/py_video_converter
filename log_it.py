@@ -1,7 +1,11 @@
 import logging
+from systemd.journal import JournaldLogHandler
 
 def get_logger(name):
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    logging.getLogger('requests').setLevel(logging.CRITICAL)
-    return logging.getLogger(name)
+    logger = logging.getLogger(name)
+    journald_handler = JournaldLogHandler()
+    journald_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+    logger.addHandler(journald_handler)
+    logger.setLevel(logging.INFO)
+    return logger
 
