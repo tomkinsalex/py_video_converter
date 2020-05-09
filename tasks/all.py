@@ -44,12 +44,13 @@ def convert(counter, file_name, file_ext):
     cmd = """rm "%s" "%s" """ % (file_util.converting_name(file_name,counter), file_util.chunk_name(file_name,file_ext,counter))
     run_shell(cmd)
     logger.info("Copied file to concat dir")
-    return file_util.to_concat_name(file_name,counter)
+    return counter
 
 
 @app.task
-def concat(input_files, file_name):
-    input_files.sort()
+def concat(num_range, file_name):
+    num_range.sort()
+    input_files = [file_util.to_concat_name(file_name,num) for num in num_range]
     logger.info("Starting to concat video %s" % file_name)
     concat_list = file_util.concat_list(file_name)
     with open(concat_list, '+a') as f:
@@ -62,11 +63,12 @@ def concat(input_files, file_name):
     cmd = """rm "%s" "%s" """ % (concat_list, '" "'.join(input_files))
     run_shell(cmd)
     logger.info("Done cleanup after concat")
-    return file_util.final_file_name(file_name)
+
 
 @app.task
-def filebot(final_file,file_name, file_ext):
-    cmd_temp= """filebot -script fn:amc --output "{final_dir}" --action  duplicate -non-strict "{final_file}" --log-file {filebot_log} --def excludeList="{processed_list}" --def artwork=y"""
+def filebot(file_name, file_ext):
+    final_file = file_util.final_file_name(file_name)
+    cmd_temp= """filebot -script fn:amc --output "{final_dir}" --action  duplicate -non-strict "{final_file}" --def excludeList="{processed_list}" --def artwork=y"""
     cmd = cmd_temp.format(
         final_dir=conf.FINAL_DIR, 
         final_file=final_file, 
@@ -96,7 +98,6 @@ def assets_refresh():
                 image.save(path.join(root,filename), quality=85, optimize=True)
     logger.info("Finished image resizing")
     
-
 
 def run_shell(cmd):
     call_subprocess(cmd)

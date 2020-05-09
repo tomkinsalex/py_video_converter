@@ -1,8 +1,11 @@
 from dotenv import load_dotenv
 import os
+from sys import platform
+
+is_linux = platform == 'linux'
 
 load_dotenv()
-ROOT_DIR= os.getenv("ROOT_DIR")
+ROOT_DIR= os.getenv("ROOT_DIR") if is_linux else os.getenv("MAC_ROOT_DIR")
 global FINAL_DIR
 FINAL_DIR=ROOT_DIR +'/home-caster-videos'
 global ASSETS_DIR
@@ -20,8 +23,8 @@ FILEBOT_LOG_FILE=ROOT_DIR +'/logs/amc.log'
 global FILEBOT_PROCESSED_LIST
 FILEBOT_PROCESSED_LIST=ROOT_DIR +'/logs/processed.txt'
 global DROP_ZONE_DIR
-DROP_ZONE_DIR=os.getenv("DROP_ZONE_DIR")
+DROP_ZONE_DIR=os.getenv("DROP_ZONE_DIR") if is_linux else os.getenv("MAC_DROP_ZONE_DIR")
 global CONVERTING_DIR
 CONVERTING_DIR=ROOT_DIR+'/converting'
 global REDIS_HOST
-REDIS_HOST=os.getenv("REDIS_HOST")
+REDIS_HOST=os.getenv("REDIS_HOST") if is_linux else os.getenv("MAC_REDIS_HOST")
