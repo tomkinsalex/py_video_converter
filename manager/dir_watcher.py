@@ -1,13 +1,13 @@
-import conf
+from util import conf
 import sys
 import time
 from watchdog.observers import Observer
-from event_handler import EventHandler
+from manager.event_handler import EventHandler
 
-class VideoDirWatcher:
-    def __init__(self, convert_q, organize_q):
+class DirWatcher:
+    def __init__(self):
         self.__src_path = conf.DROP_ZONE_DIR
-        self.__event_handler = EventHandler(convert_q, organize_q)
+        self.__event_handler = EventHandler()
         self.__event_observer = Observer()
 
     def run(self):
