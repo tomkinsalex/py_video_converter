@@ -97,9 +97,9 @@ def assets_refresh():
         asset_root = root.replace(conf.ASSET_TMP_DIR, conf.ASSETS_DIR)
         platform_agnostic_root = root.replace(conf.ASSET_TMP_DIR, '')
         for filename in filenames:
-            if not path.join(platform_agnostic_root,filename) in processed:
-                newly_processed.append(path.join(platform_agnostic_root,filename))
-                if ".png" in filename or ".jpg" in filename:
+            if ".png" in filename or ".jpg" in filename:
+                if not path.join(platform_agnostic_root,filename) in processed:
+                    newly_processed.append(path.join(platform_agnostic_root,filename))
                     image = Image.open(path.join(root,filename))
                     if "clearart" in filename or "fanart" in filename:
                         image = image.resize([int(0.35 * s) for s in image.size])
@@ -107,7 +107,7 @@ def assets_refresh():
     if newly_processed:
         with open(conf.PROCESSED_PICS_LOG, 'a') as f:
             for processed_pic in newly_processed:
-                f.write(processed_pic)
+                f.write(processed_pic+'\n')
     logger.info("Finished image resizing, processed %d new images" % len(newly_processed))
     
 
