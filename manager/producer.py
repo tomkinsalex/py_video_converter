@@ -27,10 +27,10 @@ def process(file_path):
 def produce_jobs(file_path):
     file_name, file_ext = file_util.split_file_name(file_path)
     logger.info("Starting split task for %s " % file_name)
-    split_task = split.apply_async((file_name,file_ext),queue=conf.Q_ALL_HOSTS)
+    split_task = split.apply_async((file_name,file_ext))
     split_task.wait(timeout=None, interval=1)
     num_chunks = split_task.get()
-    routine = ( group(convert.s((i,file_name,file_ext), queue=conf.Q_ALL_HOSTS) for i in range(num_chunks)) | concat.s((file_name), queue=conf.Q_ALL_HOSTS) | filebot.si((file_name,file_ext), queue=conf.Q_FINISH_UP) | assets_refresh.si((), queue=conf.Q_FINISH_UP))
+    routine = ( group(convert.s((i,file_name,file_ext)) for i in range(num_chunks)) | concat.s((file_name)) | filebot.si((file_name,file_ext)) | assets_refresh.si(()))
     logger.info("Starting routine for %s" % file_name)
     task = routine.apply_async()
     task.wait(timeout=None, interval=5)
