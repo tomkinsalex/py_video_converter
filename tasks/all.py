@@ -77,7 +77,7 @@ def concat(self, num_range, file_name):
         self.retry(throw=True, queue=conf.Q_PIS)
 
 
-@app.task(name="filebot.task", bind=True, max_retries=3)
+@app.task(name="filebot.task", bind=True, max_retries=3, exchange="q_finish_up")
 def filebot(self, file_name, file_ext):
     try:
         final_file = file_util.final_file_name(file_name)
@@ -97,7 +97,7 @@ def filebot(self, file_name, file_ext):
         self.retry(throw=True, queue=conf.Q_PIS)
 
 
-@app.task(name="assets_refresh.task")
+@app.task(name="assets_refresh.task", exchange="q_finish_up")
 def assets_refresh():
     logger.info("Starting picture resizing")
     cmd = """rsync -r --exclude '*.mp4' --exclude '*.nfo' %s/ %s """ % (conf.FINAL_DIR, conf.ASSET_TMP_DIR)
