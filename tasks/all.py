@@ -30,7 +30,7 @@ def split(self, file_name, file_ext):
         return num_chunks
     except ValueError as ex:
         logger.exception(ex)
-        self.retry(countdown=3**self.request.retries)
+        self.retry(throw=True, queue=conf.Q_PIS)
 
 
 @app.task(name="convert.task", bind=True, max_retries=3)
@@ -52,7 +52,7 @@ def convert(self, counter, file_name, file_ext):
         return counter
     except ValueError as ex:
         logger.exception(ex)
-        self.retry(countdown=3**self.request.retries)
+        self.retry(throw=True, queue=conf.Q_PIS)
 
 
 @app.task(name="concat.task", bind=True, max_retries=3)
@@ -74,7 +74,7 @@ def concat(self, num_range, file_name):
         logger.info("Done cleanup after concat")
     except ValueError as ex:
         logger.exception(ex)
-        self.retry(countdown=3**self.request.retries)
+        self.retry(throw=True, queue=conf.Q_PIS)
 
 
 @app.task(name="filebot.task", bind=True, max_retries=3)
@@ -94,7 +94,7 @@ def filebot(self, file_name, file_ext):
         run_shell('rm "%s"' % file_util.drop_zone_name(file_name, file_ext))
     except ValueError as ex:
         logger.exception(ex)
-        self.retry(countdown=3**self.request.retries)
+        self.retry(throw=True, queue=conf.Q_PIS)
 
 
 @app.task(name="assets_refresh.task")

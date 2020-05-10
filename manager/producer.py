@@ -27,12 +27,12 @@ def process(file_path):
 def produce_jobs(file_path):
     file_name, file_ext = file_util.split_file_name(file_path)
     logger.info("Starting split task for %s " % file_name)
-    split_task = split.s(file_name=file_name,file_ext=file_ext).delay()
+    split_task = split.s(file_name=file_name,file_ext=file_ext).delay(queue=conf.Q_ALL_HOSTS)
     split_task.wait(timeout=None, interval=1)
     num_chunks = split_task.get()
     routine = ( group(convert.s(counter=i, file_name=file_name, file_ext=file_ext) for i in range(num_chunks)) | concat.s(file_name=file_name) | filebot.si(file_name=file_name,file_ext=file_ext) | assets_refresh.si())
     logger.info("Starting routine for %s" % file_name)
-    task = routine.delay()
+    task = routine.delay(queue=conf.Q_ALL_HOSTS)
     task.wait(timeout=None, interval=5)
     logger.info("Finished processing routine for %s" %file_name)
 
