@@ -34,5 +34,3 @@ global Q_ALL_HOSTS
 Q_ALL_HOSTS="q_all_hosts"
 global Q_PIS
 Q_PIS="q_pis"
-global Q_FINISH_UP
-Q_FINISH_UP="q_finish_up"

@@ -9,32 +9,19 @@ imports = ('tasks.all')
 task_default_queue = conf.Q_ALL_HOSTS
 task_queues = (
     Queue(conf.Q_ALL_HOSTS, routing_key=conf.Q_ALL_HOSTS+'.#'),
-    Queue(conf.Q_FINISH_UP, routing_key=conf.Q_FINISH_UP+'.#'),
     Queue(conf.Q_PIS, routing_key=conf.Q_PIS+'.#'),
 )
 task_default_exchange = 'tasks'
 task_default_exchange_type = 'topic'
 task_default_routing_key = conf.Q_ALL_HOSTS+'.default'
 
+q_pis_dict = {'queue': conf.Q_PIS, 'routing_key': conf.Q_PIS+'.default'}
+q_all_dict = {'queue': conf.Q_ALL_HOSTS, 'routing_key': conf.Q_ALL_HOSTS+'.default'}
+
 task_routes = {
-        'tasks.all.split': {
-            'queue': conf.Q_ALL_HOSTS,
-            'routing_key': conf.Q_ALL_HOSTS+'.default',
-        },
-        'tasks.all.convert': {
-            'queue': conf.Q_ALL_HOSTS,
-            'routing_key': conf.Q_ALL_HOSTS+'.default',
-        },
-        'tasks.all.concat': {
-            'queue': conf.Q_ALL_HOSTS,
-            'routing_key': conf.Q_ALL_HOSTS+'.default',
-        },
-        'tasks.all.filebot': {
-            'queue': conf.Q_FINISH_UP,
-            'routing_key': conf.Q_FINISH_UP+'.default',
-        },
-        'tasks.all.assets_refresh': {
-            'queue': conf.Q_FINISH_UP,
-            'routing_key': conf.Q_FINISH_UP+'.default',
-        },
+        'tasks.all.split': q_pis_dict,
+        'tasks.all.convert': q_all_dict,
+        'tasks.all.concat': q_all_dict,
+        'tasks.all.filebot': q_pis_dict,
+        'tasks.all.assets_refresh': q_pis_dict,
 }
