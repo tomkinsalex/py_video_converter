@@ -8,5 +8,5 @@ def main():
     DirWatcher().run()
 
 if __name__ == '__main__':
-    #main()
-    test_concat.test()
+    main()
+    #test_concat.test()

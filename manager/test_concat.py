@@ -11,10 +11,9 @@ to_concat_l = {"Insecure S02E08 Hella Perspective": 21,
 "ATLANTA - S02 E02 - Sportin' Waves (720p - AMZN Web-DL)": 15,
 "Insecure S02E03 Hella Open":15}
 def test():
-    for k,v in to_concat_l:
+    for k,v in to_concat_l.items():
         file_ext = "mp4"
         if "Insecure" in k:
             file_ext = "mkv"
-        routine = concat.s(num_range=range(v),file_name=k) | filebot.si(file_name=k,file_ext=file_ext) | assets_refresh.si()
-        task = routine.delay()
-        task.wait(timeout=None, interval=5)
+        routine = concat.s(num_range=[i for i in range(v)],file_name=k) | filebot.si(file_name=k,file_ext=file_ext) | assets_refresh.si()
+        routine.delay()

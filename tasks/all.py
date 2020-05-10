@@ -87,16 +87,28 @@ def assets_refresh():
     cmd = """rsync -r --exclude '*.mp4' --exclude '*.nfo' %s/ %s """ % (conf.FINAL_DIR, conf.ASSET_TMP_DIR)
     logger.info("Command used : %s" % cmd)
     run_shell(cmd)
-    run_shell("rm -rf %s/*" % conf.ASSETS_DIR)
-    run_shell("cp -r %s/* %s" % (conf.ASSET_TMP_DIR, conf.ASSETS_DIR))
-    for (root, directories, filenames) in walk(conf.ASSETS_DIR):
+    cmd = """rsync -r --exclude '*.mp4' --exclude '*.nfo' --exclude '*.jpg' --exclude '*.png' %s/ %s """ % (conf.FINAL_DIR, conf.ASSETS_DIR)
+    logger.info("Command used : %s" % cmd)
+    run_shell(cmd)
+    with open(conf.PROCESSED_PICS_LOG, 'r') as f:
+        processed = [f for line in f]
+    newly_processed = []
+    for (root, directories, filenames) in walk(conf.ASSET_TMP_DIR):
+        asset_root = root.replace(conf.ASSET_TMP_DIR, conf.ASSETS_DIR)
+        platform_agnostic_root = root.replace(conf.ASSET_TMP_DIR, '')
         for filename in filenames:
-            if ".png" in filename or ".jpg" in filename:
-                image = Image.open(path.join(root,filename))
-                if "clearart" in filename or "fanart" in filename:
-                    image = image.resize([int(0.35 * s) for s in image.size])
-                image.save(path.join(root,filename), quality=85, optimize=True)
-    logger.info("Finished image resizing")
+            if not path.join(platform_agnostic_root,filename) in processed:
+                newly_processed.append(path.join(platform_agnostic_root,filename))
+                if ".png" in filename or ".jpg" in filename:
+                    image = Image.open(path.join(root,filename))
+                    if "clearart" in filename or "fanart" in filename:
+                        image = image.resize([int(0.35 * s) for s in image.size])
+                    image.save(path.join(asset_root,filename), quality=85, optimize=True)
+    if newly_processed:
+        with open(conf.PROCESSED_PICS_LOG, 'a') as f:
+            for processed_pic in newly_processed:
+                f.write(processed_pic)
+    logger.info("Finished image resizing, processed %d new images" % len(newly_processed))
     
 
 def run_shell(cmd):

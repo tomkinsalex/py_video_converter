@@ -28,3 +28,5 @@ global CONVERTING_DIR
 CONVERTING_DIR=ROOT_DIR+'/converting'
 global REDIS_HOST
 REDIS_HOST=os.getenv("REDIS_HOST") if is_linux else os.getenv("MAC_REDIS_HOST")
+global PROCESSED_PICS_LOG
+PROCESSED_PICS_LOG=ROOT_DIR+'/logs/processed_pics.txt'
