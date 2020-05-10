@@ -12,7 +12,7 @@ from app import app
 logger = get_logger(__name__)
 
 
-@app.task(name="split.task", bind=True, max_retries=3)
+@app.task(bind=True, max_retries=3)
 def split(self, file_name, file_ext):
     try:
         logger.info("Starting to split video %s " % file_name)
@@ -30,10 +30,10 @@ def split(self, file_name, file_ext):
         return num_chunks
     except ValueError as ex:
         logger.exception(ex)
-        self.retry(throw=True, queue=conf.Q_PIS)
+        self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
-@app.task(name="convert.task", bind=True, max_retries=3)
+@app.task(bind=True, max_retries=3)
 def convert(self, counter, file_name, file_ext):
     try:
         cmd_temp = """ffmpeg -y -loglevel error -stats -i "{file_input}" -sn  -vcodec h264 -acodec libvorbis -preset fast -profile:v high -level 4.1 -crf 17 -pix_fmt yuv420p -max_muxing_queue_size 1024 "{file_output}" """
@@ -52,10 +52,10 @@ def convert(self, counter, file_name, file_ext):
         return counter
     except ValueError as ex:
         logger.exception(ex)
-        self.retry(throw=True, queue=conf.Q_PIS)
+        self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
-@app.task(name="concat.task", bind=True, max_retries=3)
+@app.task(bind=True, max_retries=3)
 def concat(self, num_range, file_name):
     try:
         num_range.sort()
@@ -74,10 +74,10 @@ def concat(self, num_range, file_name):
         logger.info("Done cleanup after concat")
     except ValueError as ex:
         logger.exception(ex)
-        self.retry(throw=True, queue=conf.Q_PIS)
+        self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
-@app.task(name="filebot.finish_up", bind=True, max_retries=3)
+@app.task(bind=True, max_retries=3)
 def filebot(self, file_name, file_ext):
     try:
         final_file = file_util.final_file_name(file_name)
@@ -94,10 +94,10 @@ def filebot(self, file_name, file_ext):
         run_shell('rm "%s"' % file_util.drop_zone_name(file_name, file_ext))
     except ValueError as ex:
         logger.exception(ex)
-        self.retry(throw=True, queue=conf.Q_PIS)
+        self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
-@app.task(name="assets_refresh.finish_up")
+@app.task
 def assets_refresh():
     logger.info("Starting picture resizing")
     cmd = """rsync -r --exclude '*.mp4' --exclude '*.nfo' %s/ %s """ % (conf.FINAL_DIR, conf.ASSET_TMP_DIR)
