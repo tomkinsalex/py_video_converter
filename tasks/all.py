@@ -62,7 +62,7 @@ def concat(self, num_range, file_name):
         input_files = [file_util.to_concat_name(file_name,num) for num in num_range]
         logger.info("Starting to concat video %s" % file_name)
         concat_list = file_util.concat_list(file_name)
-        with open(concat_list, '+a') as f:
+        with open(concat_list, 'w+') as f:
             f.write("ffconcat version 1.0\nfile '"+ "'\nfile '".join(input_files)+"'")
         cmd_temp = """ffmpeg -y -v error -safe 0 -i "{concat_list}" -map 0 -c copy "{output_file}" """
         cmd = cmd_temp.format(concat_list=concat_list, output_file=file_util.final_file_name(file_name))
