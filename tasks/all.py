@@ -92,6 +92,7 @@ def filebot(self, file_name, file_ext):
         run_shell(cmd)
         run_shell('rm "%s"' % final_file)
         run_shell('rm "%s"' % file_util.drop_zone_name(file_name, file_ext))
+        logger.info("Finished filebot for %s " % file_name)
     except ValueError as ex:
         logger.exception(ex)
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
@@ -116,6 +117,7 @@ def assets_refresh():
             if ".png" in filename or ".jpg" in filename:
                 if not path.join(platform_agnostic_root,filename) in processed:
                     newly_processed.append(path.join(platform_agnostic_root,filename))
+                    logger.info("New image to optimize %s" % path.join(platform_agnostic_root,filename))
                     image = Image.open(path.join(root,filename))
                     if "clearart" in filename or "fanart" in filename:
                         image = image.resize([int(0.35 * s) for s in image.size])

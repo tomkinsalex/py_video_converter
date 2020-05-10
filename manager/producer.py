@@ -30,7 +30,7 @@ def produce_jobs(file_path):
     split_task = split.apply_async((file_name,file_ext))
     split_task.wait(timeout=None, interval=1)
     num_chunks = split_task.get()
-    routine = ( group(convert.s(counter=i,file_name=file_name,file_ext=file_ext) for i in range(num_chunks)) | concat.s(file_name=file_name) | filebot.si(file_name=file_name,file_ext=file_ext) | assets_refresh.si(()))
+    routine = ( group(convert.s(counter=i,file_name=file_name,file_ext=file_ext) for i in range(num_chunks)) | concat.s(file_name=file_name) | filebot.si(file_name=file_name,file_ext=file_ext) | assets_refresh.si())
     logger.info("Starting routine for %s" % file_name)
     task = routine.apply_async()
     task.wait(timeout=None, interval=5)
