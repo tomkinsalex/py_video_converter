@@ -46,7 +46,7 @@ def execute_flow(file_path):
 def split_task(file_name, file_ext):
     logger.info("Starting split task for %s " % file_name)
     task = split.apply_async((file_name,file_ext))
-    task.wait(timeout=None, interval=1)
+    task.wait(timeout=None, interval=2)
     num_chunks = task.get()
     return num_chunks
 
@@ -72,7 +72,7 @@ def organize_tasks(file_name,file_ext):
     logger.info("Starting organize routine for %s" % file_name)
     organize_routine = ( filebot.si(file_name=file_name,file_ext=file_ext) | assets_refresh.si() )
     task_organize = organize_routine.apply_async()
-    task_organize.wait(timeout=None, interval=10)
+    task_organize.wait(timeout=None, interval=5)
     logger.info("Finished organize routine for %s" % file_name)
 
 
