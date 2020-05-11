@@ -54,8 +54,7 @@ def split_task(file_name, file_ext):
 def convert_task(file_name, file_ext, num_chunks):
     logger.info("Starting converting routine for %s" % file_name)
     routine = group(convert.s(counter=i,file_name=file_name,file_ext=file_ext) for i in range(num_chunks))
-    task = routine.apply_async()
-    task.wait(timeout=None, interval=30)
+    task = routine()
     num_range = task.get()
     logger.info("Finished converting routine for %s" % file_name)
     return num_range
