@@ -25,3 +25,9 @@ task_routes = {
         'tasks.all.filebot': q_pis_dict,
         'tasks.all.assets_refresh': q_pis_dict,
 }
+
+task_acks_late = True
+
+worker_prefetch_multiplier = 1
+
+task_track_started = True
