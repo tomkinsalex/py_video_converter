@@ -2,6 +2,7 @@ from util import conf
 from os import rename
 
 OUTPUT_EXT='.mp4'
+illegal_chars = {',','!', '*', '%', '"', "'", '#','^','$','@','+','=','`', '~','\\','|','{','}','<','>','^', '&','?'}
 
 def chunk_name(file_name, file_ext, counter):
     return chunk_prefix(file_name, file_ext) + "{:0>2d}".format(counter) + '.' + file_ext
@@ -34,7 +35,6 @@ def concat_list(file_name):
 def split_file_name(file_path):
     file_name = '.'.join(file_path.split('.')[:-1]).split('/')[-1]
     file_ext = file_path.split('.')[-1]
-    illegal_chars = {'!', '*', '%', '"', "'", '#','^','$','@','+','=','`', '~','\\','|','{','}','<','>','^', '&','?'}
     new_name = ''.join([character for character in file_name if not character in illegal_chars])
     if new_name != file_name:
         rename(file_path, drop_zone_name(new_name, file_ext))

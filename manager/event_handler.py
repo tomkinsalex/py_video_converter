@@ -1,6 +1,6 @@
 from util.log_it import get_logger
 from watchdog.events import RegexMatchingEventHandler
-from manager.producer import process
+from manager.task_runner import execute_flow
 from multiprocessing import Process
 
 logger = get_logger(__name__)
@@ -14,7 +14,6 @@ class EventHandler(RegexMatchingEventHandler):
 
     def on_created(self, event):
         if event.src_path.split("/")[-1][0] != ".":
-            proc = Process(target=process, args=(event.src_path,),daemon=True)
+            proc = Process(target=execute_flow, args=(event.src_path,),daemon=True)
             proc.start()
-            #process(event.src_path)
             logger.info("Started new proc for %s" % event.src_path)

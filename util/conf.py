@@ -34,3 +34,5 @@ global Q_ALL_HOSTS
 Q_ALL_HOSTS="q_all_hosts"
 global Q_PIS
 Q_PIS="q_pis"
+global RESULT_CSV_FILE
+RESULT_CSV_FILE=ROOT_DIR+'/logs/results.csv'
