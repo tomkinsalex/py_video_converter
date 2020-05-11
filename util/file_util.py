@@ -34,8 +34,8 @@ def concat_list(file_name):
 def split_file_name(file_path):
     file_name = '.'.join(file_path.split('.')[:-1]).split('/')[-1]
     file_ext = file_path.split('.')[-1]
-    if "'" in file_name or '"' in file_name:
-        file_name = file_name.replace("'","")
-        file_name = file_name.replace('"','')
-        rename(file_path, drop_zone_name(file_name, file_ext))
-    return file_name, file_ext
+    illegal_chars = {'!', '*', '%', '"', "'", '#','^','$','@','+','=','`', '~','\\','|','{','}','<','>','^', '&','?'}
+    new_name = ''.join([character for character in file_name if not character in illegal_chars])
+    if new_name != file_name:
+        rename(file_path, drop_zone_name(new_name, file_ext))
+    return new_name, file_ext

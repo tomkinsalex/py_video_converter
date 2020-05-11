@@ -4,6 +4,7 @@ from os import listdir, walk, path
 from os.path import isfile, join
 from time import sleep
 from util import conf,file_util
+from util.exceptions import ShellException
 from PIL import Image
 from util import conf
 from celery import group, signature, Task
@@ -24,11 +25,12 @@ def split(self, file_name, file_ext):
             numbering="%02d")
         logger.info(" With command : %s" % cmd)
         run_shell(cmd)
+        sleep(2)
         logger.info("Done splitting video %s " % file_name)
         num_chunks = int(run_shell_check_output('ls "%s"* | wc -l' % file_util.chunk_prefix(file_name,file_ext)))
         logger.info('Number of chunks created : %d' % num_chunks)
         return num_chunks
-    except ValueError as ex:
+    except ShellException as ex:
         logger.exception(ex)
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
@@ -43,14 +45,16 @@ def convert(self, counter, file_name, file_ext):
             file_output=file_util.converting_name(file_name,counter))
         logger.info("Command used : %s" % cmd)
         run_shell(cmd)
+        sleep(2)
         logger.info("Done converting video chunk %d for %s" % (counter, file_name))
         cmd = """cp "%s" "%s" """ % (file_util.converting_name(file_name,counter), file_util.to_concat_name(file_name,counter))
         run_shell(cmd)
+        sleep(2)
         cmd = """rm "%s" "%s" """ % (file_util.converting_name(file_name,counter), file_util.chunk_name(file_name,file_ext,counter))
         run_shell(cmd)
         logger.info("Copied file to concat dir")
         return counter
-    except ValueError as ex:
+    except ShellException as ex:
         logger.exception(ex)
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
@@ -70,11 +74,12 @@ def concat(self, num_range, file_name):
         cmd = cmd_temp.format(concat_list=concat_list, output_file=file_util.final_file_name(file_name))
         logger.info("Command used : %s" % cmd)
         run_shell(cmd)
+        sleep(2)
         logger.info("Done concating video %s" % file_name)
         cmd = """rm "%s" "%s" """ % (concat_list, '" "'.join(input_files))
         run_shell(cmd)
         logger.info("Done cleanup after concat")
-    except ValueError as ex:
+    except ShellException as ex:
         logger.exception(ex)
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
@@ -83,7 +88,7 @@ def concat(self, num_range, file_name):
 def filebot(self, file_name, file_ext):
     try:
         final_file = file_util.final_file_name(file_name)
-        cmd_temp= """filebot -script fn:amc --output "{final_dir}" --action  duplicate -non-strict "{final_file}" --def excludeList="{processed_list}" --def artwork=y"""
+        cmd_temp= """filebot -script fn:amc --output "{final_dir}" --action  duplicate -non-strict "{final_file}" --def excludeList="{processed_list}" --def artwork=y --def minLengthMS=0 --def minFileSize=0"""
         cmd = cmd_temp.format(
             final_dir=conf.FINAL_DIR, 
             final_file=final_file, 
@@ -92,10 +97,10 @@ def filebot(self, file_name, file_ext):
         logger.info("Starting organizer after vid %s" % final_file)
         logger.info("Command used : %s" % cmd)
         run_shell(cmd)
-        run_shell('rm "%s"' % final_file)
-        run_shell('rm "%s"' % file_util.drop_zone_name(file_name, file_ext))
+        sleep(2)
+        run_shell('rm "%s" "%s"' % (final_file,file_util.drop_zone_name(file_name, file_ext)))
         logger.info("Finished filebot for %s " % file_name)
-    except ValueError as ex:
+    except ShellException as ex:
         logger.exception(ex)
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
@@ -123,8 +128,8 @@ def assets_refresh():
                     logger.info("New image to optimize %s" % path.join(platform_agnostic_root,filename))
                     image = Image.open(path.join(root,filename))
                     if "clearart" in filename or "fanart" in filename:
-                        image = image.resize([int(0.35 * s) for s in image.size])
-                    image.save(path.join(asset_root,filename), quality=85, optimize=True)
+                        image = image.resize([int(0.32 * s) for s in image.size])
+                    image.save(path.join(asset_root,filename), quality=82, optimize=True)
     if newly_processed:
         with open(conf.PROCESSED_PICS_LOG, 'a') as f:
             for processed_pic in newly_processed:
@@ -148,8 +153,10 @@ def call_subprocess(cmd):
         shell=True
     )
     stdout, stderr = proc.communicate()
+    if "filebot" in cmd and proc.returncode == 100:
+        return stdout
+
     if proc.returncode != 0:
-        logger.error(stderr)
-        raise ValueError(stderr)
+        raise ShellException(cmd, stdout, stderr)
 
     return stdout

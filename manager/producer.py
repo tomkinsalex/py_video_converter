@@ -20,7 +20,7 @@ def process(file_path):
         sleep(3)
     logger.info("Done waiting, file size: %d " % file_size)
     logger.info("Processing new video file event for %s" % file_path)
-    sleep(3)
+    sleep(5)
     produce_jobs(file_path)
 
 
