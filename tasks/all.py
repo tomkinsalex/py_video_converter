@@ -63,7 +63,9 @@ def concat(self, num_range, file_name):
         logger.info("Starting to concat video %s" % file_name)
         concat_list = file_util.concat_list(file_name)
         with open(concat_list, 'w+') as f:
-            f.write("ffconcat version 1.0\nfile '"+ "'\nfile '".join(input_files)+"'")
+            print("ffconcat version 1.0", file=f)
+            for chunk in input_files:
+                print("file '%s'" % chunk, file=f)
         cmd_temp = """ffmpeg -y -v error -safe 0 -i "{concat_list}" -map 0 -c copy "{output_file}" """
         cmd = cmd_temp.format(concat_list=concat_list, output_file=file_util.final_file_name(file_name))
         logger.info("Command used : %s" % cmd)
@@ -114,7 +116,8 @@ def assets_refresh():
         asset_root = root.replace(conf.ASSET_TMP_DIR, conf.ASSETS_DIR)
         platform_agnostic_root = root.replace(conf.ASSET_TMP_DIR, '')
         for filename in filenames:
-            if ".png" in filename or ".jpg" in filename:
+            ext = filename.split('.')[-1]
+            if "png" == ext or "jpg" == ext:
                 if not path.join(platform_agnostic_root,filename) in processed:
                     newly_processed.append(path.join(platform_agnostic_root,filename))
                     logger.info("New image to optimize %s" % path.join(platform_agnostic_root,filename))

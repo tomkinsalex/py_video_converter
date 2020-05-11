@@ -20,7 +20,7 @@ def to_concat_name(file_name,counter):
 
 
 def drop_zone_name(file_name,file_ext):
-    return conf.DROP_ZONE_DIR + '/' + file_name + '.' +file_ext
+    return conf.DROP_ZONE_DIR + '/' + file_name + '.' + file_ext
 
 
 def final_file_name(file_name):
@@ -28,7 +28,7 @@ def final_file_name(file_name):
 
 
 def concat_list(file_name):
-    return "%s/%s.txt" % (conf.TO_CONCAT_DIR, file_name)
+    return conf.TO_CONCAT_DIR + '/' + file_name +'.txt'
 
 
 def split_file_name(file_path):
