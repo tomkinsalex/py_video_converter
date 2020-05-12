@@ -13,7 +13,7 @@ from app import app
 logger = get_logger(__name__)
 
 
-@app.task(bind=True, max_retries=3)
+@app.task(name='task.split', bind=True, max_retries=3)
 def split(self, file_name, file_ext):
     try:
         logger.info("Starting to split video %s " % file_name)
@@ -35,7 +35,7 @@ def split(self, file_name, file_ext):
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
-@app.task(bind=True, max_retries=3)
+@app.task(name='task.convert', bind=True, max_retries=3)
 def convert(self, counter, file_name, file_ext):
     try:
         cmd_temp = """ffmpeg -y -loglevel error -stats -i "{file_input}" -sn  -vcodec h264 -acodec libvorbis -preset fast -profile:v high -level 4.1 -crf 17 -pix_fmt yuv420p -max_muxing_queue_size 1024 "{file_output}" """
@@ -59,7 +59,7 @@ def convert(self, counter, file_name, file_ext):
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
-@app.task(bind=True, max_retries=3)
+@app.task(name='task.concat', bind=True, max_retries=3)
 def concat(self, num_range, file_name):
     try:
         num_range.sort()
@@ -84,7 +84,7 @@ def concat(self, num_range, file_name):
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
-@app.task(bind=True, max_retries=3)
+@app.task(name='task.filebot', bind=True, max_retries=3)
 def filebot(self, file_name, file_ext):
     try:
         final_file = file_util.final_file_name(file_name)
@@ -105,7 +105,7 @@ def filebot(self, file_name, file_ext):
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
-@app.task
+@app.task(name='task.assets_refresh')
 def assets_refresh():
     logger.info("Starting picture resizing")
     cmd = """rsync -r --exclude '*.mp4' --exclude '*.nfo' %s/ %s """ % (conf.FINAL_DIR, conf.ASSET_TMP_DIR)

@@ -33,19 +33,19 @@ def execute_flow(file_path):
     save_results({
         'name' : file_name,
         'ext' : file_ext,
-        'size' : size(file_size),
-        'num_chunks': num_chunks,
-        'split' : split_done - start_time,
-        'convert': convert_done - split_done,
-        'concat' : concat_done - convert_done,
-        'organize': organize_done - concat_done,
-        'all': organize_done - start_time 
+        'size' : str(size(file_size)),
+        'num_chunks': str(num_chunks),
+        'split' : str(split_done - start_time),
+        'convert': str(convert_done - split_done),
+        'concat' : str(concat_done - convert_done),
+        'organize': str(organize_done - concat_done),
+        'all': str(organize_done - start_time) 
     })
 
 
 def split_task(file_name, file_ext):
     logger.info("Starting split task for %s " % file_name)
-    task = split.apply_async((file_name,file_ext))
+    task = split.apply_async(args=(file_name,file_ext), queue=conf.Q_PIS)
     task.wait(timeout=None, interval=2)
     num_chunks = task.get()
     return num_chunks
@@ -62,7 +62,7 @@ def convert_task(file_name, file_ext, num_chunks):
 
 def concat_task(file_name, num_range):
     logger.info("Starting concat task for %s " % file_name)
-    task = concat.apply_async((num_range,file_name))
+    task = concat.apply_async(args=(num_range,file_name), queue=conf.Q_PIS)
     task.wait(timeout=None, interval=5)
     logger.info("Finished concat task for %s" % file_name)
 
@@ -70,7 +70,7 @@ def concat_task(file_name, num_range):
 def organize_tasks(file_name,file_ext):
     logger.info("Starting organize routine for %s" % file_name)
     organize_routine = ( filebot.si(file_name=file_name,file_ext=file_ext) | assets_refresh.si() )
-    task_organize = organize_routine.apply_async()
+    task_organize = organize_routine.apply_async(args=(),queue=conf.Q_PIS)
     task_organize.wait(timeout=None, interval=5)
     logger.info("Finished organize routine for %s" % file_name)
 
