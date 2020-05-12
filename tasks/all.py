@@ -133,7 +133,7 @@ def assets_refresh():
     if newly_processed:
         with open(conf.PROCESSED_PICS_LOG, 'a') as f:
             for processed_pic in newly_processed:
-                f.write(processed_pic+'\n')
+                f.write('%s\n' % processed_pic)
     logger.info("Finished image resizing, processed %d new images" % len(newly_processed))
     
 

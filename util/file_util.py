@@ -2,34 +2,34 @@ from util import conf
 from os import rename
 
 OUTPUT_EXT='.mp4'
-illegal_chars = {',','!', '*', '%', '"', "'", '#','^','$','@','+','=','`', '~','\\','|','{','}','<','>','^', '&','?'}
+illegal_chars = {'’',',','!', '*', '%', '"', "'", '#','^','$','@','+','=','`', '~','\\','|','{','}','<','>','^', '&','?'}
 
 def chunk_name(file_name, file_ext, counter):
-    return chunk_prefix(file_name, file_ext) + "{:0>2d}".format(counter) + '.' + file_ext
+    return "{}{:0>2d}.{}".format(chunk_prefix(file_name, file_ext),counter,file_ext)
 
 
 def chunk_prefix(file_name, file_ext):
-    return conf.CHUNKED_DIR +'/'+file_name
+    return '%s/%s' % (conf.CHUNKED_DIR,file_name)
 
 
 def converting_name(file_name,counter):
-    return conf.CONVERTING_DIR + '/' +file_name + "{:0>2d}".format(counter) + OUTPUT_EXT
+    return "{}/{}{:0>2d}.{}".format(conf.CONVERTING_DIR,file_name,counter,OUTPUT_EXT)
 
 
 def to_concat_name(file_name,counter):
-    return conf.TO_CONCAT_DIR + '/' +file_name + "{:0>2d}".format(counter) + OUTPUT_EXT
+    return "{}/{}{:0>2d}.{}".format(conf.TO_CONCAT_DIR,file_name,counter,OUTPUT_EXT)
 
 
 def drop_zone_name(file_name,file_ext):
-    return conf.DROP_ZONE_DIR + '/' + file_name + '.' + file_ext
+    return '%s/%s.%s' % (conf.DROP_ZONE_DIR, file_name, file_ext)
 
 
 def final_file_name(file_name):
-    return conf.FILEBOT_DIR + '/' + file_name + OUTPUT_EXT
+    return '%s/%s.%s' % (conf.FILEBOT_DIR, file_name, OUTPUT_EXT)
 
 
 def concat_list(file_name):
-    return conf.TO_CONCAT_DIR + '/' + file_name +'.txt'
+    return '%s/%s.txt' % (conf.TO_CONCAT_DIR, file_name)
 
 
 def split_file_name(file_path):

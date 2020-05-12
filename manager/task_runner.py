@@ -12,9 +12,23 @@ logger = get_logger(__name__)
 
 
 def execute_flow(file_path):
-    
     file_size = wait_until_copied(file_path)
     file_name, file_ext = file_util.split_file_name(file_path)
+
+    if conf.STATS == "Y":
+        with_stats(file_name,file_ext,file_size)
+    else:
+        task = split.apply_async(args=(file_name,file_ext), queue=conf.Q_PIS)
+        task.wait(timeout=None, interval=2)
+        num_chunks = task.get()
+        routine = ( group(convert.s(args=(i,file_name,file_ext)).set(queue=conf.Q_ALL_HOSTS) for i in range(num_chunks)) |
+                    concat.s(args=(file_name)).set(queue=conf.Q_PIS) |
+                    filebot.si(args=(file_name,file_ext)).set(queue=conf.Q_PIS) | 
+                    assets_refresh.si(args=()).set(queue=conf.Q_ALL_HOSTS))
+        routine.apply_async()
+
+
+def with_stats(file_name,file_ext,file_size):
     
     start_time = time()
     
@@ -69,8 +83,8 @@ def concat_task(file_name, num_range):
 
 def organize_tasks(file_name,file_ext):
     logger.info("Starting organize routine for %s" % file_name)
-    organize_routine = ( filebot.si(file_name=file_name,file_ext=file_ext) | assets_refresh.si() )
-    task_organize = organize_routine.apply_async(args=(),queue=conf.Q_PIS)
+    organize_routine = ( filebot.si(args=(file_name,file_ext)).set(queue=conf.Q_PIS) | assets_refresh.si(args=()).set(queue=conf.Q_PIS) )
+    task_organize = organize_routine.apply_async(args=())
     task_organize.wait(timeout=None, interval=5)
     logger.info("Finished organize routine for %s" % file_name)
 
@@ -92,4 +106,4 @@ def wait_until_copied(file_path):
 def save_results(result_dict):
     with open(conf.RESULT_CSV_FILE, 'a') as f:
         file_line = ','.join(result_dict.values())
-        f.write(file_line+'\n')
+        f.write('%s\n' % file_line)
