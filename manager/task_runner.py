@@ -21,7 +21,7 @@ def execute_flow(file_path):
         task = split.apply_async(args=(file_name,file_ext), queue=conf.Q_PIS)
         task.wait(timeout=None, interval=2)
         num_chunks = task.get()
-        routine = ( group(convert.s(counter=i,file_name=file_name,file_ext=file_ext)).set(queue=conf.Q_ALL_HOSTS) for i in range(num_chunks)) |
+        routine = ( group(convert.s(counter=i,file_name=file_name,file_ext=file_ext).set(queue=conf.Q_ALL_HOSTS) for i in range(num_chunks)) |
                     concat.s(file_name=file_name).set(queue=conf.Q_PIS) |
                     filebot.si(file_name=file_name,file_ext=file_ext).set(queue=conf.Q_PIS) | 
                     assets_refresh.si().set(queue=conf.Q_ALL_HOSTS))
