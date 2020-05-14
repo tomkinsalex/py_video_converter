@@ -1,7 +1,7 @@
 from os import path
 from time import sleep,time
 from util import conf
-from tasks.all import split, convert, group_convert, concat, filebot, assets_refresh
+from tasks.all import split, convert, map_task, concat, filebot, assets_refresh
 from util.log_it import get_logger
 from util import file_util
 from  hurry.filesize import size
@@ -19,7 +19,7 @@ def execute_flow(file_path):
         with_stats(file_name,file_ext,file_size)
     else:
         routine = ( split.s().set(queue=conf.Q_PIS) |
-                    group_convert.s().set(queue=conf.Q_ALL_HOSTS) |
+                    map_task.s(convert.s()).set(queue=conf.Q_ALL_HOSTS) |
                     concat.s().set(queue=conf.Q_PIS) |
                     filebot.si().set(queue=conf.Q_PIS) | 
                     assets_refresh.si().set(queue=conf.Q_PIS))

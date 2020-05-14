@@ -36,11 +36,12 @@ def split(self, file_name, file_ext):
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
-@app.task(name='task.group_convert')
-def group_convert(num_chunks, file_name, file_ext):
+@app.task(name='task.map_task')
+def map_task(num_repeat, file_name, file_ext, callback):
     logger.info('Starting group convert')
-    group_task = group(convert.s(counter=i,file_name=file_name,file_ext=file_ext).set(queue=conf.Q_ALL_HOSTS) for i in range(num_chunks))
-    return group_task.delay()
+    callback = subtask(callback)
+    group_task = group(callback.clone(args=(i,)) for i in range(num_repeat))
+    return group_task()
 
 
 @app.task(name='task.convert', bind=True, max_retries=3)
