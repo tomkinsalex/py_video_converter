@@ -23,7 +23,8 @@ def execute_flow(file_path):
                     concat.s(file_name,file_ext).set(queue=conf.Q_PIS) |
                     filebot.si(file_name,file_ext).set(queue=conf.Q_PIS) | 
                     assets_refresh.si(file_name,file_ext).set(queue=conf.Q_PIS))
-        routine.apply_async()
+        task = routine.apply_async()
+        task.wait()
 
 
 def with_stats(file_name,file_ext,file_size):
