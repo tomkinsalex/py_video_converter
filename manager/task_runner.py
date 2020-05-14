@@ -1,7 +1,7 @@
 from os import path
 from time import sleep,time
 from util import conf
-from tasks.all import split, convert, concat, filebot, assets_refresh
+from tasks.all import split, convert, group_convert, concat, filebot, assets_refresh
 from util.log_it import get_logger
 from util import file_util
 from  hurry.filesize import size
@@ -18,14 +18,12 @@ def execute_flow(file_path):
     if conf.STATS == "Y":
         with_stats(file_name,file_ext,file_size)
     else:
-        task = split.apply_async(args=(file_name,file_ext), queue=conf.Q_PIS)
-        task.wait(timeout=None, interval=2)
-        num_chunks = task.get()
-        routine = ( group(convert.s(counter=i,file_name=file_name,file_ext=file_ext).set(queue=conf.Q_ALL_HOSTS) for i in range(num_chunks)) |
-                    concat.s(file_name=file_name).set(queue=conf.Q_PIS) |
-                    filebot.si(file_name=file_name,file_ext=file_ext).set(queue=conf.Q_PIS) | 
-                    assets_refresh.si().set(queue=conf.Q_ALL_HOSTS))
-        routine.apply_async()
+        routine = ( split.s().set(queue=conf.Q_PIS) |
+                    group_convert.s().set(queue=conf.Q_ALL_HOSTS) |
+                    concat.s().set(queue=conf.Q_PIS) |
+                    filebot.si().set(queue=conf.Q_PIS) | 
+                    assets_refresh.si().set(queue=conf.Q_PIS))
+        routine.apply_async(args=(file_name,file_ext))
 
 
 def with_stats(file_name,file_ext,file_size):

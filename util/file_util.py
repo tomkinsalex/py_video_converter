@@ -1,7 +1,7 @@
 from util import conf
 from os import rename
 
-OUTPUT_EXT='.mp4'
+OUTPUT_EXT='mp4'
 illegal_chars = {'’',',','!', '*', '%', '"', "'", '#','^','$','@','+','=','`', '~','\\','|','{','}','<','>','^', '&','?'}
 
 def chunk_name(file_name, file_ext, counter):

@@ -8,6 +8,7 @@ from util.exceptions import ShellException
 from PIL import Image
 from util import conf
 from celery import group, signature, Task
+from celery.task import subtask
 from app import app
 
 logger = get_logger(__name__)
@@ -35,6 +36,13 @@ def split(self, file_name, file_ext):
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
+@app.task(name='task.group_convert')
+def group_convert(num_chunks, file_name, file_ext):
+    logger.info('Starting group convert')
+    group_task = group(convert.s(counter=i,file_name=file_name,file_ext=file_ext).set(queue=conf.Q_ALL_HOSTS) for i in range(num_chunks))
+    return group_task.delay()
+
+
 @app.task(name='task.convert', bind=True, max_retries=3)
 def convert(self, counter, file_name, file_ext):
     try:
@@ -60,7 +68,7 @@ def convert(self, counter, file_name, file_ext):
 
 
 @app.task(name='task.concat', bind=True, max_retries=3)
-def concat(self, num_range, file_name):
+def concat(self, num_range, file_name,file_ext):
     try:
         num_range.sort()
         input_files = [file_util.to_concat_name(file_name,num) for num in num_range]
@@ -106,7 +114,7 @@ def filebot(self, file_name, file_ext):
 
 
 @app.task(name='task.assets_refresh')
-def assets_refresh():
+def assets_refresh(file_name, file_ext):
     logger.info("Starting picture resizing")
     cmd = """rsync -r --exclude '*.mp4' --exclude '*.nfo' %s/ %s """ % (conf.FINAL_DIR, conf.ASSET_TMP_DIR)
     logger.info("Command used : %s" % cmd)
