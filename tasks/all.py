@@ -7,7 +7,7 @@ from util import conf,file_util
 from util.exceptions import ShellException
 from PIL import Image
 from util import conf
-from celery import group, signature, Task
+from celery import group, signature, Task, chord
 from celery.task import subtask
 from app import app
 
@@ -37,11 +37,18 @@ def split(self, file_name, file_ext):
 
 
 @app.task(name='task.map_task')
-def map_task(num_repeat, callback):
+def map_task(num_repeat, callback, final=None):
     logger.info('Starting group convert')
     callback = subtask(callback)
-    group_task = group(callback.clone(args=(i,)) for i in range(num_repeat))
-    return group_task()
+    run_in_parallel = group(callback.clone(args=(i,)) for i in range(num_repeat))
+
+    if len(run_in_parallel.tasks) == 0:
+        return []
+
+    if final:
+        return chord(run_in_parallel)(subtask(final))
+
+    return run_in_parallel.delay()
 
 
 @app.task(name='task.convert', bind=True, max_retries=3)

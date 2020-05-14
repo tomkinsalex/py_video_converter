@@ -19,10 +19,13 @@ def execute_flow(file_path):
         with_stats(file_name,file_ext,file_size)
     else:
         routine = ( split.s(file_name,file_ext).set(queue=conf.Q_PIS) |
-                    map_task.s(convert.s(file_name,file_ext)).set(queue=conf.Q_ALL_HOSTS) |
+                    map_task.s(
+                    callback=convert.s(file_name,file_ext).set(queue=conf.Q_ALL_HOSTS),
+                    final=( 
                     concat.s(file_name,file_ext).set(queue=conf.Q_PIS) |
                     filebot.si(file_name,file_ext).set(queue=conf.Q_PIS) | 
-                    assets_refresh.si(file_name,file_ext).set(queue=conf.Q_PIS))
+                    assets_refresh.si(file_name,file_ext).set(queue=conf.Q_PIS)
+                    )))
         task = routine.apply_async()
         task.wait()
 
