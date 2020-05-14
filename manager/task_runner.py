@@ -18,12 +18,12 @@ def execute_flow(file_path):
     if conf.STATS == "Y":
         with_stats(file_name,file_ext,file_size)
     else:
-        routine = ( split.s().set(queue=conf.Q_PIS) |
-                    map_task.s(convert.s()).set(queue=conf.Q_ALL_HOSTS) |
-                    concat.s().set(queue=conf.Q_PIS) |
-                    filebot.si().set(queue=conf.Q_PIS) | 
-                    assets_refresh.si().set(queue=conf.Q_PIS))
-        routine.apply_async(args=(file_name,file_ext))
+        routine = ( split.s(file_name,file_ext).set(queue=conf.Q_PIS) |
+                    map_task.s(convert.s(file_name,file_ext)).set(queue=conf.Q_ALL_HOSTS) |
+                    concat.s(file_name,file_ext).set(queue=conf.Q_PIS) |
+                    filebot.si(file_name,file_ext).set(queue=conf.Q_PIS) | 
+                    assets_refresh.si(file_name,file_ext).set(queue=conf.Q_PIS))
+        routine.apply_async()
 
 
 def with_stats(file_name,file_ext,file_size):

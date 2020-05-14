@@ -30,17 +30,17 @@ def split(self, file_name, file_ext):
         logger.info("Done splitting video %s " % file_name)
         num_chunks = int(run_shell_check_output('ls "%s"* | wc -l' % file_util.chunk_prefix(file_name,file_ext)))
         logger.info('Number of chunks created : %d' % num_chunks)
-        return num_chunks, file_name, file_ext
+        return num_chunks
     except ShellException as ex:
         logger.exception(ex)
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
 @app.task(name='task.map_task')
-def map_task(num_repeat, file_name, file_ext, callback):
+def map_task(num_repeat, callback):
     logger.info('Starting group convert')
     callback = subtask(callback)
-    group_task = group(callback.clone(args=(i,file_name,file_ext)) for i in range(num_repeat))
+    group_task = group(callback.clone(args=(i,)) for i in range(num_repeat))
     return group_task()
 
 
@@ -62,7 +62,7 @@ def convert(self, counter, file_name, file_ext):
         cmd = """rm "%s" "%s" """ % (file_util.converting_name(file_name,counter), file_util.chunk_name(file_name,file_ext,counter))
         run_shell(cmd)
         logger.info("Copied file to concat dir")
-        return counter, file_name, file_ext
+        return counter
     except ShellException as ex:
         logger.exception(ex)
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
@@ -88,7 +88,6 @@ def concat(self, num_range, file_name,file_ext):
         cmd = """rm "%s" "%s" """ % (concat_list, '" "'.join(input_files))
         run_shell(cmd)
         logger.info("Done cleanup after concat")
-        return file_name, file_ext
     except ShellException as ex:
         logger.exception(ex)
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
@@ -110,7 +109,6 @@ def filebot(self, file_name, file_ext):
         sleep(2)
         run_shell('rm "%s" "%s"' % (final_file,file_util.drop_zone_name(file_name, file_ext)))
         logger.info("Finished filebot for %s " % file_name)
-        return file_name, file_ext
     except ShellException as ex:
         logger.exception(ex)
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
