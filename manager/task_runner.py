@@ -18,16 +18,16 @@ def execute_flow(file_path):
     if conf.STATS == "Y":
         with_stats(file_name,file_ext,file_size)
     else:
-        routine = ( split.s(file_name,file_ext).set(queue=conf.Q_PIS) |
+        file_args=(file_name,file_ext)
+        routine = ( split.s(*file_args).set(queue=conf.Q_PIS) |
                     map_task.s(
-                    callback=convert.s(file_name,file_ext).set(queue=conf.Q_ALL_HOSTS),
-                    final=( 
-                    concat.s(file_name,file_ext).set(queue=conf.Q_PIS) |
-                    filebot.si(file_name,file_ext).set(queue=conf.Q_PIS) | 
-                    assets_refresh.si(file_name,file_ext).set(queue=conf.Q_PIS)
+                    callback=convert.s(*file_args).set(queue=conf.Q_ALL_HOSTS),
+                    on_complete=( 
+                    concat.s(*file_args).set(queue=conf.Q_PIS) |
+                    filebot.si(*file_args).set(queue=conf.Q_PIS) | 
+                    assets_refresh.si(*file_args).set(queue=conf.Q_PIS)
                     )))
-        task = routine.apply_async()
-        task.wait()
+        routine.apply_async()
 
 
 def with_stats(file_name,file_ext,file_size):
@@ -76,9 +76,9 @@ def convert_task(file_name, file_ext, num_chunks):
     return num_range
 
 
-def concat_task(file_name, num_range):
+def concat_task(file_name, file_ext, num_range):
     logger.info("Starting concat task for %s " % file_name)
-    task = concat.apply_async(args=(num_range,file_name), queue=conf.Q_PIS)
+    task = concat.apply_async(args=(num_range,file_name,file_ext), queue=conf.Q_PIS)
     task.wait(timeout=None, interval=5)
     logger.info("Finished concat task for %s" % file_name)
 
@@ -86,7 +86,7 @@ def concat_task(file_name, num_range):
 def organize_tasks(file_name,file_ext):
     logger.info("Starting organize routine for %s" % file_name)
     organize_routine = ( filebot.si(args=(file_name,file_ext)).set(queue=conf.Q_PIS) | assets_refresh.si(args=()).set(queue=conf.Q_PIS) )
-    task_organize = organize_routine.apply_async(args=())
+    task_organize = organize_routine.apply_async(args=(file_name,file_ext))
     task_organize.wait(timeout=None, interval=5)
     logger.info("Finished organize routine for %s" % file_name)
 

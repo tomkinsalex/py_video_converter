@@ -7,7 +7,7 @@ from util import conf,file_util
 from util.exceptions import ShellException
 from PIL import Image
 from util import conf
-from celery import group, signature, Task, chord
+from celery import group, signature, chord
 from celery.task import subtask
 from app import app
 
@@ -37,18 +37,11 @@ def split(self, file_name, file_ext):
 
 
 @app.task(name='task.map_task')
-def map_task(num_repeat, callback, final=None):
+def map_task(num_repeat, task_sig, on_complete):
     logger.info('Starting group convert')
-    callback = subtask(callback)
-    run_in_parallel = group(callback.clone(args=(i,)) for i in range(num_repeat))
-
-    if len(run_in_parallel.tasks) == 0:
-        return []
-
-    if final:
-        return chord(run_in_parallel)(subtask(final))
-
-    return run_in_parallel.delay()
+    task_sig = subtask(task_sig)
+    task_group = group(task_sig.clone(args=(i,)) for i in range(num_repeat))
+    return chord(task_group)(subtask(on_complete))
 
 
 @app.task(name='task.convert', bind=True, max_retries=3)
@@ -100,25 +93,21 @@ def concat(self, num_range, file_name,file_ext):
         self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
 
 
-@app.task(name='task.filebot', bind=True, max_retries=3)
-def filebot(self, file_name, file_ext):
-    try:
-        final_file = file_util.final_file_name(file_name)
-        cmd_temp= """filebot -script fn:amc --output "{final_dir}" --action  duplicate -non-strict "{final_file}" --def excludeList="{processed_list}" --def artwork=y --def minLengthMS=0 --def minFileSize=0"""
-        cmd = cmd_temp.format(
-            final_dir=conf.FINAL_DIR, 
-            final_file=final_file, 
-            filebot_log=conf.FILEBOT_LOG_FILE, 
-            processed_list=conf.FILEBOT_PROCESSED_LIST)
-        logger.info("Starting organizer after vid %s" % final_file)
-        logger.info("Command used : %s" % cmd)
-        run_shell(cmd)
-        sleep(2)
-        run_shell('rm "%s" "%s"' % (final_file,file_util.drop_zone_name(file_name, file_ext)))
-        logger.info("Finished filebot for %s " % file_name)
-    except ShellException as ex:
-        logger.exception(ex)
-        self.retry(throw=True, queue=conf.Q_PIS, routing_key=conf.Q_PIS+'.retry')
+@app.task(name='task.filebot')
+def filebot(file_name, file_ext):
+    final_file = file_util.final_file_name(file_name)
+    cmd_temp= """filebot -script fn:amc --output "{final_dir}" --action  duplicate -non-strict "{final_file}" --def excludeList="{processed_list}" --def artwork=y --def minLengthMS=0 --def minFileSize=0"""
+    cmd = cmd_temp.format(
+        final_dir=conf.FINAL_DIR, 
+        final_file=final_file, 
+        filebot_log=conf.FILEBOT_LOG_FILE, 
+        processed_list=conf.FILEBOT_PROCESSED_LIST)
+    logger.info("Starting organizer after vid %s" % final_file)
+    logger.info("Command used : %s" % cmd)
+    run_shell(cmd)
+    sleep(2)
+    run_shell('rm "%s" "%s"' % (final_file,file_util.drop_zone_name(file_name, file_ext)))
+    logger.info("Finished filebot for %s " % file_name)
 
 
 @app.task(name='task.assets_refresh')
