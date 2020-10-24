@@ -1,6 +1,9 @@
 import subprocess
+import json
+import urllib.request
 from util.log_it import get_logger
 from os import listdir, walk, path
+from glob import iglob
 from os.path import isfile, join
 from time import sleep
 from util import conf,file_util
@@ -140,7 +143,21 @@ def assets_refresh(file_name, file_ext):
             for processed_pic in newly_processed:
                 f.write('%s\n' % processed_pic)
     logger.info("Finished image resizing, processed %d new images" % len(newly_processed))
-    
+    return max(iglob('%s/**/*.mp4' % conf.FINAL_DIR, recursive=True), key=path.getctime)
+
+
+@app.task(name='task.post_new_video')
+def post_new_video(video_path):
+    logger.info("About to post video with path %s" % video_path)
+    body = { 'path' : video_path }
+    req = urllib.request.Request(conf.API_POST_URL)
+    req.add_header('Content-Type', 'application/json; charset=utf-8')
+    jsondata = json.dumps(body)
+    jsondataasbytes = jsondata.encode('utf-8')
+    req.add_header('Content-Length', len(jsondataasbytes))
+    response = urllib.request.urlopen(req, jsondataasbytes)
+    logger.info("Response: " % response.read())
+
 
 def run_shell(cmd):
     call_subprocess(cmd)

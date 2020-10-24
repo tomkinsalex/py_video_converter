@@ -1,7 +1,7 @@
 from os import path
 from time import sleep,time
 from util import conf
-from tasks.all import split, convert, map_task, concat, filebot, assets_refresh
+from tasks.all import split, convert, map_task, concat, filebot, assets_refresh, post_new_video
 from util.log_it import get_logger
 from util import file_util
 from  hurry.filesize import size
@@ -25,7 +25,8 @@ def execute_flow(file_path):
                     on_complete=( 
                     concat.s(*args).set(queue=conf.Q_PIS) |
                     filebot.si(*args).set(queue=conf.Q_PIS) | 
-                    assets_refresh.si(*args).set(queue=conf.Q_PIS)
+                    assets_refresh.si(*args).set(queue=conf.Q_PIS) | 
+                    post_new_video.s().set(queue=conf.Q_PIS)
                     )))
         routine.apply_async()
 

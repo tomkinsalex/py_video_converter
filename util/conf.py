@@ -27,7 +27,7 @@ DROP_ZONE_DIR=os.getenv("DROP_ZONE_DIR") if is_linux else os.getenv("MAC_DROP_ZO
 global CONVERTING_DIR
 CONVERTING_DIR='%s/converting' % ROOT_DIR
 global REDIS_HOST
-REDIS_HOST=os.getenv("REDIS_HOST") if is_linux else os.getenv("MAC_REDIS_HOST")
+REDIS_HOST=os.getenv("REDIS_HOST")
 global PROCESSED_PICS_LOG
 PROCESSED_PICS_LOG='%s/logs/processed_pics.txt' % ROOT_DIR
 global Q_ALL_HOSTS
@@ -38,3 +38,5 @@ global RESULT_CSV_FILE
 RESULT_CSV_FILE='%s/logs/results.csv' % ROOT_DIR
 global STATS
 STATS=os.getenv("STATS")
+global API_POST_URL
+API_POST_URL='http://%s:9000/newvideo' % REDIS_HOST
