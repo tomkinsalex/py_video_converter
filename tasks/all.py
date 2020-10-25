@@ -41,7 +41,7 @@ def split(self, file_name, file_ext):
 
 @app.task(name='task.map_task')
 def map_task(num_repeat, task_sig, on_complete):
-    logger.info('Starting group convert')
+    logger.info('Starting %d map tasks' % num_repeat)
     task_sig = subtask(task_sig)
     task_group = group(task_sig.clone(args=(i,)) for i in range(num_repeat))
     return chord(task_group)(subtask(on_complete))
@@ -88,7 +88,8 @@ def concat(self, num_range, file_name,file_ext):
         run_shell(cmd)
         sleep(2)
         logger.info("Done concating video %s" % file_name)
-        cmd = """rm "%s" "%s" """ % (concat_list, '" "'.join(input_files))
+        cmd = """rm "%s" """ % ('" "'.join(input_files))
+        #cmd = """rm "%s" "%s" """ % (concat_list, '" "'.join(input_files))
         run_shell(cmd)
         logger.info("Done cleanup after concat")
     except ShellException as ex:
@@ -99,17 +100,17 @@ def concat(self, num_range, file_name,file_ext):
 @app.task(name='task.filebot')
 def filebot(file_name, file_ext):
     final_file = file_util.final_file_name(file_name)
-    cmd_temp= """filebot -script fn:amc --output "{final_dir}" --action  duplicate -non-strict "{final_file}" --def excludeList="{processed_list}" --def artwork=y --def minLengthMS=0 --def minFileSize=0"""
+    cmd_temp= """filebot -script fn:amc --output "{final_dir}" --action  duplicate -non-strict "{final_file}" --def artwork=y --def minLengthMS=0 --def minFileSize=0"""
     cmd = cmd_temp.format(
         final_dir=conf.FINAL_DIR, 
         final_file=final_file, 
-        filebot_log=conf.FILEBOT_LOG_FILE, 
-        processed_list=conf.FILEBOT_PROCESSED_LIST)
+        filebot_log=conf.FILEBOT_LOG_FILE)
     logger.info("Starting organizer after vid %s" % final_file)
     logger.info("Command used : %s" % cmd)
     run_shell(cmd)
     sleep(2)
-    run_shell('rm "%s" "%s"' % (final_file,file_util.drop_zone_name(file_name, file_ext)))
+    #run_shell('rm "%s" "%s"' % (final_file,file_util.drop_zone_name(file_name, file_ext)))
+    run_shell('rm "%s"' % (final_file))
     logger.info("Finished filebot for %s " % file_name)
 
 
@@ -157,6 +158,26 @@ def post_new_video(video_path):
     req.add_header('Content-Length', len(jsondataasbytes))
     response = urllib.request.urlopen(req, jsondataasbytes)
     logger.info("Response: " % response.read())
+
+
+def check_lengths(file_name, file_ext):
+    video_path = max(iglob('%s/**/*.mp4' % conf.FINAL_DIR, recursive=True), key=path.getctime)
+    cmd_template = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 '{file_path}'"
+    new_length = run_shell_check_output(cmd_template.format(file_path=video_path))
+    old_length = run_shell_check_output(cmd_template.format(file_path=file_util.drop_zone_name(file_name, file_ext)))
+    logger.info("New length: %s" % new_length)
+    logger.info("Old length: %s" % old_length)
+    return float(old_length), float(new_length)
+
+
+def clean_up(file_name, file_ext):
+    run_shell('rm "%s"' % (file_util.drop_zone_name(file_name, file_ext)))
+    run_shell( """rm "%s" """ % (file_util.concat_list(file_name)))
+
+
+def to_investigate(file_name, file_ext):
+    run_shell('mv "%s" %s' % (file_util.drop_zone_name(file_name, file_ext), conf.TO_INVESTIGATE_DIR))
+    run_shell( """mv "%s" %s """ % (file_util.concat_list(file_name),conf.TO_INVESTIGATE_DIR))
 
 
 def run_shell(cmd):

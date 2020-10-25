@@ -14,6 +14,8 @@ global ASSET_TMP_DIR
 ASSET_TMP_DIR='%s/home-caster-tmp' % ROOT_DIR
 global TO_CONCAT_DIR
 TO_CONCAT_DIR='%s/to_concat' % ROOT_DIR
+global TO_INVESTIGATE_DIR
+TO_INVESTIGATE_DIR='%s/to_investigate' % ROOT_DIR
 global CHUNKED_DIR
 CHUNKED_DIR='%s/chunked' % ROOT_DIR
 global FILEBOT_DIR
