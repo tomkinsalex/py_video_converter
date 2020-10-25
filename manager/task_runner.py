@@ -56,10 +56,10 @@ def with_stats(file_name,file_ext,file_size, password):
     concat_task(file_name, file_ext, num_range)
     concat_done = time()
 
-    path_vid = organize_tasks(file_name,file_ext)
+    organize_tasks(file_name,file_ext)
     organize_done = time()
 
-    posting_task(path_vid)
+    posting_task()
     
     old_length , new_length = check_lengths(file_name,file_ext)
     if abs(old_length - new_length) > 20:

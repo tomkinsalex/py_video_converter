@@ -161,7 +161,7 @@ def post_new_video(video_path):
 
 
 def check_lengths(file_name, file_ext):
-    video_path = max(iglob('%s/**/*.mp4' % conf.FINAL_DIR, recursive=True), key=path.getctime)
+    video_path = max(glob('%s/**/*.mp4' % conf.FINAL_DIR, recursive=True), key=path.getctime)
     cmd_template = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 '{file_path}'"
     new_length = run_shell_check_output(cmd_template.format(file_path=video_path))
     old_length = run_shell_check_output(cmd_template.format(file_path=file_util.drop_zone_name(file_name, file_ext)))
