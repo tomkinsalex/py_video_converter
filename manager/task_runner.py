@@ -117,8 +117,7 @@ def organize_tasks(file_name,file_ext):
 
 def posting_task():
     video_path = max(glob('%s/**/*.mp4' % conf.FINAL_DIR, recursive=True), key=path.getctime)
-    task = post_new_video.apply_async(args=(video_path),queue=conf.Q_PIS)
-    task.wait(timeout=None, interval=5)
+    post_new_video(video_path)
 
 
 def wait_until_copied(file_path):
