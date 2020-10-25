@@ -3,7 +3,7 @@ import json
 import urllib.request
 from util.log_it import get_logger
 from os import listdir, walk, path
-from glob import iglob
+from glob import glob
 from os.path import isfile, join
 from time import sleep
 from util import conf,file_util
@@ -144,7 +144,7 @@ def assets_refresh(file_name, file_ext):
             for processed_pic in newly_processed:
                 f.write('%s\n' % processed_pic)
     logger.info("Finished image resizing, processed %d new images" % len(newly_processed))
-    return max(iglob('%s/**/*.mp4' % conf.FINAL_DIR, recursive=True), key=path.getctime)
+    return max(glob('%s/**/*.mp4' % conf.FINAL_DIR, recursive=True), key=path.getctime)
 
 
 @app.task(name='task.post_new_video')

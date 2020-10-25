@@ -5,6 +5,7 @@ from tasks.all import split, convert, map_task, concat, filebot, assets_refresh,
 from util.log_it import get_logger
 from util import file_util
 from  hurry.filesize import size
+from glob import glob
 
 from celery import signature, chain, group, chord
 
@@ -112,10 +113,10 @@ def organize_tasks(file_name,file_ext):
     task_organize = organize_routine.apply_async()
     task_organize.wait(timeout=None, interval=5)
     logger.info("Finished organize routine for %s" % file_name)
-    return task_organize.get()
 
 
-def posting_task(video_path):
+def posting_task():
+    video_path = max(glob('%s/**/*.mp4' % conf.FINAL_DIR, recursive=True), key=path.getctime)
     task = post_new_video.apply_async(args=(video_path),queue=conf.Q_PIS)
     task.wait(timeout=None, interval=5)
 
