@@ -55,10 +55,10 @@ def with_stats(file_name,file_ext,file_size, password):
     concat_task(file_name, file_ext, num_range)
     concat_done = time()
 
-    organize_tasks(file_name,file_ext)
+    path_vid = organize_tasks(file_name,file_ext)
     organize_done = time()
 
-    posting_task(file_name, file_ext)
+    posting_task(path_vid)
     
     old_length , new_length = check_lengths(file_name,file_ext)
     if abs(old_length - new_length) > 20:
@@ -112,10 +112,11 @@ def organize_tasks(file_name,file_ext):
     task_organize = organize_routine.apply_async()
     task_organize.wait(timeout=None, interval=5)
     logger.info("Finished organize routine for %s" % file_name)
+    return task_organize.get()
 
 
-def posting_task(file_name, file_ext):
-    task = post_new_video.apply_async(args=(file_name,file_ext),queue=conf.Q_PIS)
+def posting_task(video_path):
+    task = post_new_video.apply_async(args=(video_path),queue=conf.Q_PIS)
     task.wait(timeout=None, interval=5)
 
 
