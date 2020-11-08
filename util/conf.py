@@ -42,3 +42,5 @@ global STATS
 STATS=os.getenv("STATS")
 global API_POST_URL
 API_POST_URL='http://%s:9000/newvideo' % REDIS_HOST
+global API_IS_NEW_URL
+API_IS_NEW_URL='http://%s:9000/isnewcontent' % REDIS_HOST

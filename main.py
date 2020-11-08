@@ -6,8 +6,8 @@ import os
 from glob import glob
 import sys
 
-def main(password):
-    DirWatcher(password).run()
+def main():
+    DirWatcher().run()
 
 
 def post_all_vids():
@@ -19,4 +19,4 @@ if __name__ == '__main__':
     if sys.argv[1] == 'Y':
          post_all_vids()
     else:
-        main(sys.argv[2])
+        main()

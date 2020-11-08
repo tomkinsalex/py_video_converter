@@ -1,15 +1,11 @@
 import subprocess
-import json
-import urllib.request
+import util.content_api_util as content_api
 from util.log_it import get_logger
-from os import listdir, walk, path
+from os import path
 from glob import glob
-from os.path import isfile, join
 from time import sleep
 from util import conf,file_util
 from util.exceptions import ShellException
-from PIL import Image
-from util import conf
 from celery import group, signature, chord
 from celery.task import subtask
 from app import app
@@ -112,58 +108,36 @@ def filebot(file_name, file_ext):
     #run_shell('rm "%s" "%s"' % (final_file,file_util.drop_zone_name(file_name, file_ext)))
     run_shell('rm "%s"' % (final_file))
     logger.info("Finished filebot for %s " % file_name)
+    return max(glob('%s/**/*.mp4' % conf.FINAL_DIR, recursive=True), key=path.getctime)
 
 
 @app.task(name='task.assets_refresh')
-def assets_refresh(file_name, file_ext):
-    logger.info("Starting picture resizing")
-    cmd = """rsync -r --exclude '*.mp4' --exclude '*.nfo' %s/ %s """ % (conf.FINAL_DIR, conf.ASSET_TMP_DIR)
-    logger.info("Command used : %s" % cmd)
-    run_shell(cmd)
-    cmd = """rsync -r --exclude '*.mp4' --exclude '*.nfo' --exclude '*.jpg' --exclude '*.png' %s/ %s """ % (conf.FINAL_DIR, conf.ASSETS_DIR)
-    logger.info("Command used : %s" % cmd)
-    run_shell(cmd)
-    with open(conf.PROCESSED_PICS_LOG, 'r') as f:
-        processed = { line.strip() for line in f.readlines() }
-    newly_processed = []
-    for (root, directories, filenames) in walk(conf.ASSET_TMP_DIR):
-        asset_root = root.replace(conf.ASSET_TMP_DIR, conf.ASSETS_DIR)
-        platform_agnostic_root = root.replace(conf.ASSET_TMP_DIR, '')
-        for filename in filenames:
-            ext = filename.split('.')[-1]
-            if "png" == ext or "jpg" == ext:
-                if not path.join(platform_agnostic_root,filename) in processed:
-                    newly_processed.append(path.join(platform_agnostic_root,filename))
-                    logger.info("New image to optimize %s" % path.join(platform_agnostic_root,filename))
-                    image = Image.open(path.join(root,filename))
-                    if "clearart" in filename or "fanart" in filename:
-                        image = image.resize([int(0.32 * s) for s in image.size])
-                    image.save(path.join(asset_root,filename), quality=82, optimize=True)
-    if newly_processed:
-        with open(conf.PROCESSED_PICS_LOG, 'a') as f:
-            for processed_pic in newly_processed:
-                f.write('%s\n' % processed_pic)
-    logger.info("Finished image resizing, processed %d new images" % len(newly_processed))
-    return max(glob('%s/**/*.mp4' % conf.FINAL_DIR, recursive=True), key=path.getctime)
+def assets_refresh(new_video, file_name, file_ext):
+    if content_api.is_new_content(new_video):
+        from util import image_util
+        logger.info("New Content - Starting picture resizing")
+        cmd = """rsync -r --exclude "/*/*/*/" --exclude '*.mp4' --exclude '*.nfo' %s/ %s """ % (conf.FINAL_DIR, conf.ASSET_TMP_DIR)
+        logger.info("Command used : %s" % cmd)
+        run_shell(cmd)
+        cmd = """rsync -r --exclude "/*/*/*/" --exclude '*.mp4' --exclude '*.nfo' --exclude '*.jpg' --exclude '*.png' %s/ %s """ % (conf.FINAL_DIR, conf.ASSETS_DIR)
+        logger.info("Command used : %s" % cmd)
+        run_shell(cmd)
+        content_root = file_util.content_root_dir(new_video)
+        image_util.process_images(content_root)
+        logger.info("Finished image resizing, processed new images")
+    return new_video
 
 
 @app.task(name='task.post_new_video')
 def post_new_video(video_path):
     logger.info("About to post video with path %s" % video_path)
-    body = { 'path' : video_path }
-    req = urllib.request.Request(conf.API_POST_URL)
-    req.add_header('Content-Type', 'application/json; charset=utf-8')
-    jsondata = json.dumps(body)
-    jsondataasbytes = jsondata.encode('utf-8')
-    req.add_header('Content-Length', len(jsondataasbytes))
-    response = urllib.request.urlopen(req, jsondataasbytes)
-    logger.info("Response: " % response.read())
+    content_api.post_new_video(video_path)
 
 
-def check_lengths(file_name, file_ext):
-    video_path = max(glob('%s/**/*.mp4' % conf.FINAL_DIR, recursive=True), key=path.getctime)
-    cmd_template = "ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 '{file_path}'"
-    new_length = run_shell_check_output(cmd_template.format(file_path=video_path))
+def check_lengths(new_video, file_name, file_ext):
+    logger.info("Checking lengths for %s" % file_name)
+    cmd_template = """ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "{file_path}" """
+    new_length = run_shell_check_output(cmd_template.format(file_path=new_video))
     old_length = run_shell_check_output(cmd_template.format(file_path=file_util.drop_zone_name(file_name, file_ext)))
     logger.info("New length: %s" % new_length)
     logger.info("Old length: %s" % old_length)

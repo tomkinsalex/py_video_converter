@@ -5,9 +5,9 @@ from watchdog.observers import Observer
 from manager.event_handler import EventHandler
 
 class DirWatcher:
-    def __init__(self, password):
+    def __init__(self):
         self.__src_path = conf.DROP_ZONE_DIR
-        self.__event_handler = EventHandler(password)
+        self.__event_handler = EventHandler()
         self.__event_observer = Observer()
 
     def run(self):
